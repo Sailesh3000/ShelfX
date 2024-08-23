@@ -1,14 +1,14 @@
 {
-  "dependencies": {
-    "bcrypt": "^5.1.1",
-    "body-parser": "^1.20.2",
-    "cors": "^2.8.5",
-    "express": "^4.19.2",
-    "mysql": "^2.18.1",
-    "path": "^0.12.7",
-    "react-scripts": "^5.0.1"
-  },
+  "name": "shelfx",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
   "scripts": {
-    "start": "react-scripts start"
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
   }
 }
