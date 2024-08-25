@@ -27,7 +27,7 @@ const BookCarousel = () => {
 
   return (
     <div className="bg-[#222831] py-8 px-4">
-      <h2 className="text-4xl tracking-tight font-extrabold text-white mb-14 text-center">Explore Our Collection</h2>
+      <h2 className="text-4xl tracking-tight font-extrabold text-white mb-14 text-center">Explore Our Rentals</h2>
       <div className="overflow-hidden relative">
         <div className="flex animate-scroll gap-16 hover:animate-pause">
           {books.concat(books).map((book, index) => (
