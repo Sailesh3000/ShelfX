@@ -6,7 +6,6 @@ import ScrollingCarousel from "../components/BookCarousel"
 const Home = () => {
   return (
     <>
-    <Navbar />
     <Hero />
     <Roles />
     <ScrollingCarousel />

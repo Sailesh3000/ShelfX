@@ -12,7 +12,7 @@ const Roles = () => {
           <img src={Upload} alt="Upload Book" className="w-50  mb-4" />
           <h3 className="text-2xl tracking-tight font-extrabold mb-2 text-[#FFD369]">Upload Your Books</h3>
           <p className="text-white mb-4">List your books on ShelfX for others to rent or buy. Simply upload and start earning!</p>
-          <button className="bg-[#FFD369] text-black py-2 px-4 rounded">Start Selling</button>
+          <a href="/login-seller"><button className="bg-[#FFD369] text-black py-2 px-4 rounded">Start Selling</button></a>
         </div>
         <div className="bg-[#393E46] rounded-lg p-6 shadow-lg w-80 text-left card">
           <img src={Hand} alt="Rent Book" className="w-50 mb-16" />
@@ -24,7 +24,7 @@ const Roles = () => {
           <img src={Price} alt="Sell Book" className="w-50 mb-4" />
           <h3 className="text-2xl tracking-tight font-extrabold mb-2 text-[#FFD369]">Sell Your Books</h3>
           <p className="text-white mb-4">Have books you no longer need? Sell them on ShelfX and connect with buyers directly.</p>
-          <button className="bg-[#FFD369] text-black py-2 px-4 rounded">List a Book</button>
+          <a href="/login-seller"><button className="bg-[#FFD369] text-black py-2 px-4 rounded">List a Book</button></a>
         </div>
       </div>
     </div>

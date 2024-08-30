@@ -15,12 +15,14 @@ const Hero = () => {
           <div>
             <div className="lg:px-28 flex flex-row md:px-48 sm:flex sm:flex-row justify-center">
               <dotlottie-player src="https://lottie.host/4568a68e-712e-46e9-9438-c0ad81ea8533/7C5WvzpoSV.json" background="transparent" speed="1" style={{width: 100 ,height: 100}} loop autoplay></dotlottie-player>
+              <a href="/login-seller">
               <button
                 type="button"
                 className="text-[#222831] font-medium rounded-lg w-[150px] h-[60px] text-base px-4 py-2 p-4 text-center bg-[#FFD369] hover:bg-[#ecd5a0] focus:bg-[#ecc363] "
               >
                 Upload a Book
               </button>
+              </a>
             </div>
           </div>
         </div>

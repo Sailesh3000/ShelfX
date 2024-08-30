@@ -9,10 +9,10 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-[#393E46] border-gray-200 sm:mb-8">
+    <nav className="bg-[#393E46] border-gray-200 sm:mb-8 lg:mb-0 md:mb-0 w-full">
       <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
         <a
-          href="#"
+          href="/"
           className="flex items-center space-x-3 rtl:space-x-reverse"
         >
           <img
@@ -25,12 +25,14 @@ const Navbar = () => {
           </span>
         </a>
         <div className="flex md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse">
+          <a href='/login-seller'>
           <button
             type="button"
             className="text-[#222831] font-medium rounded-lg text-sm px-4 py-2 text-center bg-[#FFD369] hover:bg-[#FFD369] focus:bg-[#ecc363]"
           >
             Login
           </button>
+          </a>
           <button
             onClick={handleMenuToggle}
             type="button"
@@ -64,18 +66,9 @@ const Navbar = () => {
             <li>
               <a
                 href="#"
-                className="block py-2 px-3 md:p-0 text-[#EEEEEE] hover:text-[#FFD369]"
-                aria-current="page"
-              >
-                Home
-              </a>
-            </li>
-            <li>
-              <a
-                href="#"
                 className="block py-2 px-3 md:p-0 text-[#EEEEEE] rounded hover:text-[#FFD369]"
               >
-                Features
+                About Us
               </a>
             </li>
             <li>
