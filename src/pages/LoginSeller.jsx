@@ -6,8 +6,8 @@ import { GiWorld } from "react-icons/gi";
 
 const LoginSeller = () => {
   return (
-    <section className="flex flex-col lg:flex-row max-h-screen">
-      <section className="flex items-center justify-center w-full md:w-[500px] lg:w-1/2 bg-[#FFD369] min-h-screen">
+    <section className="flex flex-col lg:flex-row max-h-screen gap-4">
+      <section className="flex items-center justify-center w-full md:w-full lg:w-1/2 bg-[#FFD369] min-h-screen">
         <div className="max-w-md">
           <div className="mb-6">
             <h2 className="text-5xl font-bold text-[#222831]">Why Sell with Us?</h2>
@@ -30,7 +30,7 @@ const LoginSeller = () => {
         </div>
       </section>
 
-      <div className="flex items-center justify-center w-full lg:w-1/2 md:px-48">
+      <div className="flex items-center justify-center w-full lg:w-1/2 px-8">
         <Login />
       </div>
     </section>
