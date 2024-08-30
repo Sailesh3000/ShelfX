@@ -1,13 +1,15 @@
 import React from 'react';
 import { useState } from 'react';
 const Login = () => {
- const Login =()=>{
+ 
   const [formdata,setdata]=useState({
     email:'',
     password:'',
 
   });
- }
+  const[islogin,setlogin]=useState(false);
+   c
+ 
 
   return (
     <div className="justify-center px-4 lg:py-0 w-[500px] sm:px-8 sm:gap-2">
