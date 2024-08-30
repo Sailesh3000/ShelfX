@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import logo from "../assets/logo.png";
+import { useLocation } from 'react-router-dom';
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const location = useLocation();
 
   const handleMenuToggle = () => {
     setMenuOpen(!menuOpen);
   };
+
+  const isSignUpPage = location.pathname === '/login-seller';
 
   return (
     <nav className="bg-[#393E46] border-gray-200 sm:mb-8 lg:mb-0 md:mb-0 w-full">
@@ -25,14 +29,16 @@ const Navbar = () => {
           </span>
         </a>
         <div className="flex md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse">
-          <a href='/login-seller'>
-          <button
-            type="button"
-            className="text-[#222831] font-medium rounded-lg text-sm px-4 py-2 text-center bg-[#FFD369] hover:bg-[#FFD369] focus:bg-[#ecc363]"
-          >
-            Login
-          </button>
-          </a>
+        {!isSignUpPage && (
+            <a href='/login-seller'>
+              <button
+                type="button"
+                className="text-[#222831] font-medium rounded-lg text-sm px-4 py-2 text-center bg-[#FFD369] hover:bg-[#FFD369] focus:bg-[#ecc363]"
+              >
+                Login
+              </button>
+            </a>
+          )}
           <button
             onClick={handleMenuToggle}
             type="button"
