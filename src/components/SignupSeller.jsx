@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
 
-const Login = () => {
+const SignupSeller = ({ onToggle }) => {
   const [formData, setFormData] = useState({
     username: '',
     email: '',
     password: '',
     confirmPassword: '',
   });
-}
 
-  const [isLogin, setIsLogin] = useState(false);
+  const [isLogin, setIsLogin] = useState(false); // Correctly placed inside the component
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -30,10 +29,10 @@ const Login = () => {
 
     try {
       const response = await fetch('http://localhost:5000/login-seller', {
-        method: 'POST', // use colon (:) instead of equals (=)
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username: formData.username, // use colon (:) instead of equals (=)
+          username: formData.username,
           email: formData.email,
           password: formData.password,
         }),
@@ -52,8 +51,6 @@ const Login = () => {
     }
   };
 
-
-const SignupSeller = ({ onToggle }) => {
   return (
     <div className="justify-center px-4 lg:py-0 w-[500px] sm:px-8 sm:gap-2">
       <div className="w-full bg-[#393E46] rounded-lg shadow md:mt-0 sm:max-w-md xl:p-0">
@@ -145,4 +142,4 @@ const SignupSeller = ({ onToggle }) => {
   );
 };
 
-export default SignupSeller
+export default SignupSeller;
