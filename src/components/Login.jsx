@@ -1,15 +1,56 @@
-import React from 'react';
-import { useState } from 'react';
-const Login = () => {
- 
-  const [formdata,setdata]=useState({
-    email:'',
-    password:'',
+import React, { useState } from 'react';
 
+const Login = () => {
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
   });
-  const[islogin,setlogin]=useState(false);
-   c
- 
+
+  const [isLogin, setIsLogin] = useState(false);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // Password confirmation check
+    if (formData.password !== formData.confirmPassword) {
+      alert('Passwords do not match!');
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:5000/login-seller', {
+        method: 'POST', // use colon (:) instead of equals (=)
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: formData.username, // use colon (:) instead of equals (=)
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+
+      const data = await response.text();
+      if (data === 'Registration successful') {
+        setIsLogin(true);
+        alert('Account created successfully!');
+      } else {
+        alert('Registration failed');
+      }
+    } catch (error) {
+      console.log('Error:', error);
+      alert('An error occurred. Please try again.');
+    }
+  };
+
 
   return (
     <div className="justify-center px-4 lg:py-0 w-[500px] sm:px-8 sm:gap-2">
@@ -18,35 +59,54 @@ const Login = () => {
           <h1 className="text-2xl text-[#FFD369] tracking-tight font-extrabold mb-4">
             Create a Seller account
           </h1>
-          <form className="space-y-4 md:space-y-6" action="#">
+          <form className="space-y-4 md:space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="email" className="block mb-2 text-sm font-medium text-white">Your email</label>
+              <label htmlFor="username" className="block mb-2 text-sm font-medium text-[#FFD369]">Username</label>
+              <input
+                type="text"
+                id="username"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FFD369] focus:border-[#FFD369] block w-full p-2.5"
+                placeholder="Enter your username"
+                required
+              />
+            </div>
+            <div>
+              <label htmlFor="email" className="block mb-2 text-sm font-medium text-[#FFD369]">Your email</label>
               <input 
                 type="email" 
                 name="email" 
                 id="email" 
+                value={formData.email}
+                onChange={handleChange}
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FFD369] focus:border-[#FFD369] block w-full p-2.5" 
                 placeholder="name@company.com" 
                 required 
               />
             </div>
             <div>
-              <label htmlFor="password" className="block mb-2 text-sm font-medium text-white">Password</label>
+              <label htmlFor="password" className="block mb-2 text-sm font-medium text-[#FFD369]">Password</label>
               <input 
                 type="password" 
                 name="password" 
                 id="password" 
+                value={formData.password}
+                onChange={handleChange}
                 placeholder="••••••••" 
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FFD369] focus:border-[#FFD369] block w-full p-2.5" 
                 required 
               />
             </div>
             <div>
-              <label htmlFor="confirm-password" className="block mb-2 text-sm font-medium text-white">Confirm password</label>
+              <label htmlFor="confirm-password" className="block mb-2 text-sm font-medium text-[#FFD369]">Confirm password</label>
               <input 
                 type="password" 
-                name="confirm-password" 
+                name="confirmPassword" 
                 id="confirm-password" 
+                value={formData.confirmPassword}
+                onChange={handleChange}
                 placeholder="••••••••" 
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FFD369] focus:border-[#FFD369] block w-full p-2.5" 
                 required 
