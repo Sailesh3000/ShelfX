@@ -42,7 +42,6 @@ const SellerAuth = () => {
       </section>
 
       <div className="flex items-center justify-center w-full lg:w-1/2 px-8">
-        {/* Render Login or Signup form based on state */}
         {isLogin ? (
           <Login onToggle={toggleAuthMode} />
         ) : (

@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom'; // Import Link for navigation
 
-const Login = () => {
+const SignupSeller = () => {
   const [formData, setFormData] = useState({
     username: '',
     email: '',
     password: '',
     confirmPassword: '',
   });
-}
-
-  const [isLogin, setIsLogin] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -22,45 +20,19 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Password confirmation check
     if (formData.password !== formData.confirmPassword) {
       alert('Passwords do not match!');
       return;
     }
 
-    try {
-      const response = await fetch('http://localhost:5000/login-seller', {
-        method: 'POST', // use colon (:) instead of equals (=)
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: formData.username, // use colon (:) instead of equals (=)
-          email: formData.email,
-          password: formData.password,
-        }),
-      });
-
-      const data = await response.text();
-      if (data === 'Registration successful') {
-        setIsLogin(true);
-        alert('Account created successfully!');
-      } else {
-        alert('Registration failed');
-      }
-    } catch (error) {
-      console.log('Error:', error);
-      alert('An error occurred. Please try again.');
-    }
+    // Add form submission logic here (e.g., POST to backend)
   };
 
-
-const SignupSeller = () => {
   return (
     <div className="justify-center px-4 lg:py-0 w-[500px] sm:px-8 sm:gap-2">
       <div className="w-full bg-[#393E46] rounded-lg shadow md:mt-0 sm:max-w-md xl:p-0">
         <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
-          <h1 className="text-2xl text-[#FFD369] tracking-tight font-extrabold mb-4">
-            Create a Seller account
-          </h1>
+          <h1 className="text-2xl text-[#FFD369] tracking-tight font-extrabold mb-4">Create a Seller Account</h1>
           <form className="space-y-4 md:space-y-6" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="username" className="block mb-2 text-sm font-medium text-[#FFD369]">Username</label>
@@ -114,29 +86,16 @@ const SignupSeller = () => {
                 required 
               />
             </div>
-            <div className="flex items-start">
-              <div className="flex items-center h-5">
-                <input 
-                  id="terms" 
-                  aria-describedby="terms" 
-                  type="checkbox" 
-                  className="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-[#FFD369]" 
-                  required 
-                />
-              </div>
-              <div className="ml-3 text-sm">
-                <label htmlFor="terms" className="font-light text-white">
-                  I accept the <a className="font-medium text-[#FFD369] hover:underline" href="#">Terms and Conditions</a>
-                </label>
-              </div>
-            </div>
             <button 
               type="submit" 
               className="w-full text-gray-900 bg-[#FFD369] hover:bg-yellow-500 focus:ring-4 focus:outline-none focus:ring-[#FFD369] font-medium rounded-lg text-sm px-5 py-2.5 text-center">
               Create an account
             </button>
             <p className="text-sm font-light text-white">
-              Already have an account? <a href="#" onClick={onToggle} className="font-medium text-[#FFD369] hover:underline">Login here</a>
+              Already have an account?{' '}
+              <Link to="/login-seller" className="font-medium text-[#FFD369] hover:underline">
+                Login here
+              </Link>
             </p>
           </form>
         </div>
@@ -145,4 +104,4 @@ const SignupSeller = () => {
   );
 };
 
-export default SignupSeller
+export default SignupSeller;
