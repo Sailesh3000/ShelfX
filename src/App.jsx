@@ -1,16 +1,17 @@
 import './App.css';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Home from './pages/Home';
-import LoginSeller from './pages/LoginSeller';
+import SellerAuth from './pages/SellerAuth';
 import Navbar from './components/Navbar';
+import SellerProfile from './pages/SellerDashBoard';
 
 function App() {
   return (
     <Router>
-      <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/login-seller" element={<LoginSeller />} />
+        <Route path="/login-seller" element={<SellerAuth />} />
+        <Route path="/seller-xyz" element={<SellerProfile />} />
       </Routes>
     </Router>
   );

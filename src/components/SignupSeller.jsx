@@ -7,6 +7,7 @@ const Login = () => {
     password: '',
     confirmPassword: '',
   });
+}
 
   const [isLogin, setIsLogin] = useState(false);
 
@@ -52,6 +53,7 @@ const Login = () => {
   };
 
 
+const SignupSeller = () => {
   return (
     <div className="justify-center px-4 lg:py-0 w-[500px] sm:px-8 sm:gap-2">
       <div className="w-full bg-[#393E46] rounded-lg shadow md:mt-0 sm:max-w-md xl:p-0">
@@ -134,7 +136,7 @@ const Login = () => {
               Create an account
             </button>
             <p className="text-sm font-light text-white">
-              Already have an account? <a href="#" className="font-medium text-[#FFD369] hover:underline">Login here</a>
+              Already have an account? <a href="#" onClick={onToggle} className="font-medium text-[#FFD369] hover:underline">Login here</a>
             </p>
           </form>
         </div>
@@ -143,4 +145,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default SignupSeller

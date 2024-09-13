@@ -1,13 +1,24 @@
-import React from 'react';
-import Login from "../components/Login";
+import React, { useState } from 'react';
+import Signup from "../components/SignupSeller";
+import Login from "../components/LoginSeller"
+import Navbar from '../components/Navbar';
 import { MdOutlinePayment } from "react-icons/md";
 import { BiSupport } from "react-icons/bi";
 import { GiWorld } from "react-icons/gi";
 
-const LoginSeller = () => {
+const SellerAuth = () => {
+
+  const [isLogin, setIsLogin] = useState(false);
+
+  const toggleAuthMode = () => {
+    setIsLogin((prevIsLogin) => !prevIsLogin);
+  };
+
   return (
+    <>
+    <Navbar />
     <section className="flex flex-col lg:flex-row max-h-screen gap-4">
-      <section className="flex items-center justify-center w-full md:w-full lg:w-1/2 bg-[#FFD369] min-h-screen">
+      <section className="flex items-center justify-center w-full md:w-full lg:w-1/2 bg-[#FFD369] min-h-screen rounded-r-full">
         <div className="max-w-md">
           <div className="mb-6">
             <h2 className="text-5xl font-bold text-[#222831]">Why Sell with Us?</h2>
@@ -31,10 +42,16 @@ const LoginSeller = () => {
       </section>
 
       <div className="flex items-center justify-center w-full lg:w-1/2 px-8">
-        <Login />
+        {/* Render Login or Signup form based on state */}
+        {isLogin ? (
+          <Login onToggle={toggleAuthMode} />
+        ) : (
+          <Signup onToggle={toggleAuthMode} />
+        )}
       </div>
     </section>
+    </>
   );
 };
 
-export default LoginSeller;
+export default SellerAuth;
