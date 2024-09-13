@@ -28,7 +28,7 @@ const SignupSeller = ({ onToggle }) => {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/login-seller', {
+      const response = await fetch('http://localhost:5000/signup-seller', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

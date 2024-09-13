@@ -4,6 +4,7 @@ const mysql = require('mysql2/promise');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 const port = 5000;
@@ -24,8 +25,10 @@ const db = mysql.createPool({
   database: 'ShelfX'
 });
 
+const SECRET_KEY = 'hello12345byebye'; // Change this to a more secure value
+
 // Handle POST request to register a new user
-app.post('/login-seller', async (req, res) => {
+app.post('/signup-seller', async (req, res) => {
   const { username, email, password } = req.body;
 
   try {
@@ -43,28 +46,34 @@ app.post('/login-seller', async (req, res) => {
 });
 
 // Handle POST request for login
-app.post('/login', async (req, res) => {
-  const { username, password } = req.body;
+app.post('/login-seller', async (req, res) => {
+  const { email, password } = req.body;
 
   try {
-    const sql = 'SELECT username, password FROM users WHERE username = ?';
-    const [rows] = await db.query(sql, [username]);
+    // Check if the user exists
+    const [rows] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
 
     if (rows.length === 0) {
-      return res.status(401).send('Invalid username or password');
+      return res.status(400).send('User not found');
     }
 
-    const hashedPassword = rows[0].password;
+    const user = rows[0];
 
-    const isMatch = await bcrypt.compare(password, hashedPassword);
-
-    if (isMatch) {
-      res.status(200).send('Login successful');
-    } else {
-      res.status(401).send('Invalid username or password');
+    // Compare the password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).send('Invalid credentials');
     }
+
+    // Generate a JWT token
+    const token = jwt.sign({ id: user.id }, SECRET_KEY, { expiresIn: '1h' });
+
+    res.status(200).json({
+      message: 'Login successful',
+      token,
+    });
   } catch (err) {
-    console.error('Error logging in:', err);
+    console.error('Error during login:', err);
     res.status(500).send('Server error');
   }
 });
