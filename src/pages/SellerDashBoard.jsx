@@ -2,11 +2,10 @@ import React, { useState } from 'react';
 import { FaUserCircle } from 'react-icons/fa'; 
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } from '@mui/material';
 
-
 const SellerProfile = () => {
   const [activeTab, setActiveTab] = useState('myBooks'); 
   const [openDialog, setOpenDialog] = useState(false);
-  const [selectedImages, setSelectedImages] = useState([]);
+  const [selectedImage, setSelectedImage] = useState(null); // Allow only one image
 
   const handleDialogOpen = () => {
     setOpenDialog(true);
@@ -14,6 +13,7 @@ const SellerProfile = () => {
 
   const handleDialogClose = () => {
     setOpenDialog(false);
+    setSelectedImage(null); // Clear image when dialog is closed
   };
 
   const handleTabClick = (tab) => {
@@ -21,13 +21,14 @@ const SellerProfile = () => {
   };
 
   const handleImageSelect = (event) => {
-    const files = Array.from(event.target.files);
-    const imageFiles = files.filter(file => file.type.startsWith('image/')); 
-    setSelectedImages(imageFiles);
+    const file = event.target.files[0]; // Only allow the first file
+    if (file && file.type.startsWith('image/')) {
+      setSelectedImage(file);
+    }
   };
 
-  const handleImageRemove = (index) => {
-    setSelectedImages(prevImages => prevImages.filter((_, i) => i !== index));
+  const handleImageRemove = () => {
+    setSelectedImage(null); // Remove the selected image
   };
 
   return (
@@ -104,30 +105,27 @@ const SellerProfile = () => {
             <input 
               type="file" 
               accept="image/*" 
-              multiple 
-              onChange={handleImageSelect}
+              onChange={handleImageSelect} // Single file upload
               className="mt-2"
             />
           </div>
 
-          {/* Display Selected Image Previews */}
-          <div className="flex flex-wrap gap-4">
-            {selectedImages.map((image, index) => (
-              <div key={index} className="relative">
-                <img
-                  src={URL.createObjectURL(image)}
-                  alt="Selected"
-                  className="w-24 h-24 object-cover rounded-md"
-                />
-                <button
-                  className="absolute top-0 right-0 text-white bg-red-600 rounded-full w-6 h-6"
-                  onClick={() => handleImageRemove(index)}
-                >
-                  &times;
-                </button>
-              </div>
-            ))}
-          </div>
+          {/* Display Selected Image Preview */}
+          {selectedImage && (
+            <div className="relative">
+              <img
+                src={URL.createObjectURL(selectedImage)}
+                alt="Selected"
+                className="w-24 h-24 object-cover rounded-md"
+              />
+              <button
+                className="absolute top-0 right-0 text-white bg-red-600 rounded-full w-6 h-6"
+                onClick={handleImageRemove} // Remove the selected image
+              >
+                &times;
+              </button>
+            </div>
+          )}
 
           {/* Other Fields */}
           <TextField

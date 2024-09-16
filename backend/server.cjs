@@ -8,15 +8,12 @@ const bcrypt = require("bcrypt");
 const app = express();
 const port = 5000;
 
-// Middleware
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Serve static files from React build directory
 app.use(express.static(path.join(__dirname, "build")));
 
-// Create a MySQL connection pool
 const db = mysql.createPool({
   host: "localhost",
   user: "root",
@@ -24,7 +21,6 @@ const db = mysql.createPool({
   database: "ShelfX",
 });
 
-// Handle POST request to register a new user
 app.post("/login-seller", async (req, res) => {
   const { username, email, password } = req.body;
 
@@ -42,7 +38,6 @@ app.post("/login-seller", async (req, res) => {
   }
 });
 
-// Handle POST request for login
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
 
@@ -69,8 +64,7 @@ app.post("/login", async (req, res) => {
   }
 });
 
-// Start the server
-// Start the server
+
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
