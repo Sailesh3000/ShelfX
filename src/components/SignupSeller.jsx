@@ -8,7 +8,7 @@ const SignupSeller = ({ onToggle }) => {
     confirmPassword: '',
   });
 
-  const [isLogin, setIsLogin] = useState(false); // Correctly placed inside the component
+  const [isLogin, setIsLogin] = useState(false); 
 
   const handleChange = (e) => {
     const { name, value } = e.target;
