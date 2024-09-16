@@ -8,8 +8,6 @@ const SignupSeller = ({ onToggle }) => {
     confirmPassword: '',
   });
 
-  const [isLogin, setIsLogin] = useState(false); 
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -21,14 +19,13 @@ const SignupSeller = ({ onToggle }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Password confirmation check
     if (formData.password !== formData.confirmPassword) {
       alert('Passwords do not match!');
       return;
     }
 
     try {
-      const response = await fetch('http://localhost:5000/signup-seller', {
+      const response = await fetch('http://localhost:5000/SignupSeller', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -40,16 +37,16 @@ const SignupSeller = ({ onToggle }) => {
 
       const data = await response.text();
       if (data === 'Registration successful') {
-        setIsLogin(true);
         alert('Account created successfully!');
       } else {
         alert('Registration failed');
       }
     } catch (error) {
-      console.log('Error:', error);
+      console.error('Error:', error);
       alert('An error occurred. Please try again.');
     }
   };
+
 
   return (
     <div className="justify-center px-4 lg:py-0 w-[500px] sm:px-8 sm:gap-2">

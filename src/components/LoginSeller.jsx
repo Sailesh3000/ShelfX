@@ -4,16 +4,15 @@ import { useNavigate } from 'react-router-dom'; // Import useNavigate
 const LoginSeller = ({ onToggle }) => {
   const [formData, setFormData] = useState({
     email: '',
-    password: ''
+    password: '',
   });
 
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // Initialize useNavigate
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: value,
+      [e.target.name]: e.target.value
     });
   };
 
@@ -21,24 +20,25 @@ const LoginSeller = ({ onToggle }) => {
     e.preventDefault();
 
     try {
-      const response = await fetch('http://localhost:5000/login-seller', {
+      const response = await fetch('http://localhost:5000/LoginSeller', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password
+        })
       });
 
-      const data = await response.json();
       if (response.ok) {
-        // Store the token in local storage or cookies if needed
-        localStorage.setItem('token', data.token);
-
-        // Redirect to the Seller Profile page
-        navigate('/seller-xyz');
+        alert('Login successful');
+        navigate('/seller-xyz'); // Redirect to Seller Profile page
       } else {
-        alert(data);
+        alert('Invalid username or password');
       }
     } catch (error) {
-      console.log('Error:', error);
+      console.error('Error:', error);
       alert('An error occurred. Please try again.');
     }
   };
