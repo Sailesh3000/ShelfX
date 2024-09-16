@@ -1,16 +1,15 @@
-const express = require('express');
-const path = require('path');
-const mysql = require('mysql2/promise');
-const cors = require('cors');
-const bodyParser = require('body-parser');
-const bcrypt = require('bcrypt');
+const express = require("express");
+const path = require("path");
+const mysql = require("mysql2/promise");
+const cors = require("cors");
+const bodyParser = require("body-parser");
+const bcrypt = require("bcrypt");
 const session = require('express-session');
-const multer = require('multer'); // Import multer for file uploads
+const multer = require("multer");
 
 const app = express();
 const port = 5000;
 
-// Middleware
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -28,12 +27,11 @@ app.use(session({
 // Serve static files from React build directory
 app.use(express.static(path.join(__dirname, 'build')));
 
-// Create a MySQL connection pool
 const db = mysql.createPool({
-  host: 'localhost',
-  user: 'root',
-  password: '',
-  database: 'ShelfX'
+  host: "localhost",
+  user: "root",
+  password: "",
+  database: "ShelfX",
 });
 
 // Configure multer for file uploads
@@ -59,8 +57,8 @@ app.post('/SignupSeller', async (req, res) => {
 
     res.status(200).send('Registration successful');
   } catch (err) {
-    console.error('Error registering user:', err);
-    res.status(500).send('Server error');
+    console.error("Error registering user:", err);
+    res.status(500).send("Server error");
   }
 });
 
@@ -89,8 +87,8 @@ app.post('/LoginSeller', async (req, res) => {
       res.status(401).send('Invalid email or password');
     }
   } catch (err) {
-    console.error('Error logging in:', err);
-    res.status(500).send('Server error');
+    console.error("Error logging in:", err);
+    res.status(500).send("Server error");
   }
 });
 
