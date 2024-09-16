@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { FaUserCircle } from 'react-icons/fa'; 
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } from '@mui/material';
 
 const SellerProfile = () => {
   const [activeTab, setActiveTab] = useState('myBooks'); 
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null); // Allow only one image
-
+  const navigate = useNavigate();
   const handleDialogOpen = () => {
     setOpenDialog(true);
   };
@@ -31,6 +33,17 @@ const SellerProfile = () => {
     setSelectedImage(null); // Remove the selected image
   };
 
+  const handleLogout = async () => {
+    try {
+      const response = await axios.post('http://localhost:5000/logout');
+      if (response.status === 200) {
+        alert('Logout successful');
+        navigate('/');
+      }
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
   return (
     <div className="min-h-screen bg-[#EEEEEE]">
       {/* Navigation Bar */}
@@ -54,6 +67,15 @@ const SellerProfile = () => {
         <div className="flex items-center space-x-4">
           <FaUserCircle className="w-8 h-8 text-white" />
           <h3 className='text-xl tracking-wide'>Sailesh</h3>
+        </div>
+        <div className=''>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="text-white font-medium rounded-lg text-sm px-2 py-1 text-center hover:text-[#FFD369] focus:bg-[#ecc363]"
+          >
+            Logout
+          </button>
         </div>
       </nav>
 
