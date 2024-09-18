@@ -5,6 +5,7 @@ import SellerAuth from './pages/SellerAuth';
 import Navbar from './components/Navbar';
 import SellerProfile from './pages/SellerDashBoard';
 import Subscription from './pages/Subscription';
+import BookGrid from './pages/BookGrid';
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Route path="/login-seller" element={<SellerAuth />} />
         <Route path="/seller-xyz" element={<SellerProfile />} />
         <Route path="/subscription" element={<Subscription />} />
+        <Route path="/bookList" element={<BookGrid />} />
       </Routes>
     </Router>
   );
