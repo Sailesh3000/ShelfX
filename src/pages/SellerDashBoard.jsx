@@ -7,8 +7,9 @@ import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } 
 const SellerProfile = () => {
   const [activeTab, setActiveTab] = useState('myBooks'); 
   const [openDialog, setOpenDialog] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null); // Allow only one image
+  const [selectedImage, setSelectedImage] = useState(null); // Base64 image data
   const navigate = useNavigate();
+
   const handleDialogOpen = () => {
     setOpenDialog(true);
   };
@@ -23,16 +24,48 @@ const SellerProfile = () => {
   };
 
   const handleImageSelect = (event) => {
-    const file = event.target.files[0]; // Only allow the first file
+    const file = event.target.files[0];
     if (file && file.type.startsWith('image/')) {
-      setSelectedImage(file);
+      setSelectedImage(URL.createObjectURL(file)); // Convert File to URL
     }
   };
-
+  
   const handleImageRemove = () => {
-    setSelectedImage(null); // Remove the selected image
+    setSelectedImage(null); // Remove the URL and File
   };
+  
 
+  const handleSubmit = async () => {
+    const formData = new FormData();
+    formData.append('address', document.getElementById('address').value);
+    formData.append('pincode', document.getElementById('pincode').value);
+    formData.append('price', document.getElementById('price').value);
+  
+    if (selectedImage) {
+      const file = await fetch(selectedImage).then(res => res.blob());
+      formData.append('image', file, 'image.jpg');
+    }
+  
+    try {
+      const response = await axios.post('http://localhost:5000/uploadBook', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        withCredentials: true, // Include credentials
+      });
+  
+      if (response.status === 200) {
+        alert('Book uploaded successfully');
+        handleDialogClose();
+      } else {
+        console.error('Upload failed:', response.data);
+      }
+    } catch (error) {
+      console.error('Failed to upload book:', error);
+    }
+  };
+  
+  
   const handleLogout = async () => {
     try {
       const response = await axios.post('http://localhost:5000/logout');
@@ -44,6 +77,7 @@ const SellerProfile = () => {
       console.error('Logout failed:', error);
     }
   };
+
   return (
     <div className="min-h-screen bg-[#EEEEEE]">
       {/* Navigation Bar */}
@@ -121,60 +155,55 @@ const SellerProfile = () => {
         <DialogTitle>Upload a Book</DialogTitle>
         <DialogContent>
           {/* Drag and Drop Section */}
-          <div className="border-dashed border-2 border-gray-400 py-6 text-center rounded-md mb-4">
-            <p className="text-gray-500">Drag and Drop file</p>
-            <p className="text-gray-500">Or</p>
-            <input 
-              type="file" 
-              accept="image/*" 
-              onChange={handleImageSelect} // Single file upload
-              className="mt-2"
-            />
+          <div className="border-dashed border-2 border-gray-300 p-4 rounded-md text-center">
+            <p className="text-gray-600">Drag and drop an image here or click to select a file</p>
+            <input type="file" accept="image/*" onChange={handleImageSelect} />
           </div>
-
-          {/* Display Selected Image Preview */}
+          
           {selectedImage && (
-            <div className="relative">
-              <img
-                src={URL.createObjectURL(selectedImage)}
-                alt="Selected"
-                className="w-24 h-24 object-cover rounded-md"
-              />
-              <button
-                className="absolute top-0 right-0 text-white bg-red-600 rounded-full w-6 h-6"
-                onClick={handleImageRemove} // Remove the selected image
+            <div className="mt-4 text-center">
+              <img src={selectedImage} alt="Selected" className="max-w-xs max-h-60 object-cover mx-auto" />
+              <button 
+                onClick={handleImageRemove} 
+                className="mt-2 text-red-600 hover:underline"
               >
-                &times;
+                Remove Image
               </button>
             </div>
           )}
-
-          {/* Other Fields */}
+          
           <TextField
             margin="dense"
+            id="address"
             label="Address"
             type="text"
             fullWidth
-            variant="filled"
+            variant="outlined"
           />
           <TextField
             margin="dense"
+            id="pincode"
             label="Pincode"
             type="text"
             fullWidth
-            variant="filled"
+            variant="outlined"
           />
           <TextField
             margin="dense"
+            id="price"
             label="Price"
-            type="number"
+            type="text"
             fullWidth
-            variant="filled"
+            variant="outlined"
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleDialogClose} color="primary">Cancel</Button>
-          <Button onClick={handleDialogClose} color="primary">Submit</Button>
+          <Button onClick={handleDialogClose} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} color="primary">
+            Submit
+          </Button>
         </DialogActions>
       </Dialog>
     </div>
