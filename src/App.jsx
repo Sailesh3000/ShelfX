@@ -6,6 +6,8 @@ import Navbar from './components/Navbar';
 import SellerProfile from './pages/SellerDashBoard';
 import Subscription from './pages/Subscription';
 import BookGrid from './pages/BookGrid';
+import AdminLogin from './components/AdminLogin';
+import AdminDashboard from './components/AminDashboard';
 
 function App() {
   return (
@@ -16,6 +18,8 @@ function App() {
         <Route path="/seller-xyz" element={<SellerProfile />} />
         <Route path="/subscription" element={<Subscription />} />
         <Route path="/bookList" element={<BookGrid />} />
+        <Route path="/adminLogin" element={<AdminLogin />} />
+        <Route path="/adminDashboard" element={<AdminDashboard />} />
       </Routes>
     </Router>
   );

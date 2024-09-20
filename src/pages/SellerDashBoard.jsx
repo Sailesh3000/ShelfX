@@ -61,7 +61,12 @@ const SellerProfile = () => {
         console.error('Upload failed:', response.data);
       }
     } catch (error) {
-      console.error('Failed to upload book:', error);
+      if (error.response?.status === 403 && error.response?.data?.redirect) {
+        window.location.href = error.response.data.redirect;
+      } else {
+        console.error("Error uploading book:", error);
+        alert('Error uploading the book. Please check your subscription or try again.');
+      }
     }
   };
   

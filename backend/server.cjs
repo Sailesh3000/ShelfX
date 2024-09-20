@@ -104,18 +104,38 @@ app.post('/LoginSeller', async (req, res) => {
 });
 
 app.post('/uploadBook', upload.single('image'), async (req, res) => {
-  console.log("Session during uploadBook:", req.session);
+  const userId = globalUserId;
+
+  if (!userId) {
+    return res.status(401).send('User not authenticated. Please log in.');
+  }
+
+  // Get the user's subscription
+  const [subscriptionRows] = await db.query('SELECT plan FROM subscriptions WHERE userId = ?', [userId]);
+  const userPlan = subscriptionRows[0]?.plan;
+
+  if (!userPlan) {
+    return res.status(403).json({ redirect: 'http://localhost:5173/subscription' });
+}
+
+  const uploadLimits = {
+    free: 5,
+    starter: 50,
+    premium: Infinity
+  };
+
+  const [bookCountRows] = await db.query('SELECT COUNT(*) as count FROM books WHERE userId = ?', [userId]);
+  const currentUploadCount = bookCountRows[0].count;
+
+  if (currentUploadCount >= uploadLimits[userPlan]) {
+    return res.status(403).json({ redirect: 'http://localhost:5173/subscription' });
+  }
+
   const { address, pincode, price } = req.body;
   const image = req.file;
-  const userId = globalUserId; // Use global variable for user ID
 
   if (!image) {
     return res.status(400).send('No image provided');
-  }
-
-  if (!userId) {
-    console.log('User not authenticated, session data:', req.session);
-    return res.status(401).send('User not authenticated');
   }
 
   try {
@@ -129,6 +149,29 @@ app.post('/uploadBook', upload.single('image'), async (req, res) => {
     res.status(500).send("Server error");
   }
 });
+
+
+
+// Subscription endpoint
+app.post('/subscribe/:selectedPlan', async (req, res) => {
+  const { selectedPlan } = req.params; 
+  const userId = globalUserId;
+
+  if (!userId) {
+    return res.status(401).send('User not authenticated');
+  }
+
+  try {
+    const sql = 'INSERT INTO subscriptions (userId, plan) VALUES (?, ?)';
+    await db.query(sql, [userId, selectedPlan]);
+    res.status(200).send('Subscription successful');
+  } catch (err) {
+    console.error("Error subscribing user:", err);
+    res.status(500).send('Server error');
+  }
+});
+
+
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
