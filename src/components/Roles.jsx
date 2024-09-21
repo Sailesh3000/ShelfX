@@ -14,11 +14,13 @@ const Roles = () => {
           <p className="text-white mb-4">List your books on ShelfX for others to rent or buy. Simply upload and start earning!</p>
           <a href="/login-seller"><button className="bg-[#FFD369] text-black py-2 px-4 rounded">Start Selling</button></a>
         </div>
+        
         <div className="bg-[#393E46] rounded-lg p-6 shadow-lg w-80 text-left card">
+        <a href='/login-Buyer'>
           <img src={Hand} alt="Rent Book" className="w-50 mb-16" />
           <h3 className="text-2xl tracking-tight font-extrabold mb-2 text-[#FFD369]">Rent Books</h3>
           <p className="text-white mb-4">Browse a vast collection of books available for rent. Enjoy reading without the commitment of buying.</p>
-          <button className="bg-[#FFD369] text-black py-2 px-4 rounded ">Explore Rentals</button>
+          <button className="bg-[#FFD369] text-black py-2 px-4 rounded ">Explore Rentals</button></a>
         </div>
         <div className="bg-[#393E46] rounded-lg p-6 shadow-lg w-80 text-left card">
           <img src={Price} alt="Sell Book" className="w-50 mb-4" />

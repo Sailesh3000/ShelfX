@@ -14,9 +14,10 @@ const Modal = ({ closeModal }) => {
           >
             Cancel
           </button>
+          <a href='/login-Buyer'>
           <button className="bg-[#FFD369] text-black py-2 px-4 rounded">
             Sign Up
-          </button>
+          </button></a>
         </div>
       </div>
     </div>

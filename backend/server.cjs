@@ -4,7 +4,6 @@ const mysql = require("mysql2/promise");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const bcrypt = require("bcrypt");
-const session = require('express-session');
 const multer = require("multer");
 
 const app = express();
@@ -43,6 +42,7 @@ app.use((req, res, next) => {
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
+// Create MySQL connection pool
 const db = mysql.createPool({
   host: "localhost",
   user: "root",
@@ -103,6 +103,7 @@ app.post('/LoginSeller', async (req, res) => {
   }
 });
 
+// Upload book endpoint
 app.post('/uploadBook', upload.single('image'), async (req, res) => {
   const userId = globalUserId;
 
@@ -172,6 +173,57 @@ app.post('/subscribe/:selectedPlan', async (req, res) => {
 });
 
 
+// Logout endpoint
+app.post('/logout', (req, res) => {
+  UserSession.clear(); // Clear the global user ID
+  res.status(200).send('Logout successful');
+});
+///////////////////////////////////////////////////----------BUYER----------/////////////////////////////////////////////////////////
+
+app.post('/SignupBuyer',async(req,res)=>{
+  const { username, email, password ,pincode,state} = req.body;
+
+  try {
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Insert the user into the database
+    const sql = 'INSERT INTO buyers (username, email, password,pincode,state) VALUES (?, ?, ?,?,?)';
+    await db.query(sql, [username, email, hashedPassword,pincode,state]);
+
+    res.status(200).send('Registration successful');
+  } catch (err) {
+    console.error("Error registering user:", err);
+    res.status(500).send("Server error");
+  }
+});
+
+app.post('/LoginBuyer', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const sql = 'SELECT id, password FROM buyers WHERE email = ?';
+    const [rows] = await db.query(sql, [email]);
+
+    if (rows.length === 0) {
+      return res.status(401).send('Invalid email or password');
+    }
+
+    const hashedPassword = rows[0].password;
+    const isMatch = await bcrypt.compare(password, hashedPassword);
+
+    if (isMatch) {
+      UserSession.userId = rows[0].id; 
+      console.log(req.UserSession);// Set user ID using UserSession
+      res.status(200).send('Login successful');
+    } else {
+      res.status(401).send('Invalid email or password');
+    }
+  } catch (err) {
+    console.error("Error logging in:", err);
+    res.status(500).send("Server error");
+  }
+});
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
