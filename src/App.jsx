@@ -6,6 +6,7 @@ import BuyerAuth from './pages/BuyerAuth';
 import BookGrid from './components/BookGrid';
 import SellerProfile from './pages/SellerDashBoard';
 import Subscription from './pages/Subscription';
+import BookGrid from './pages/BookGrid';
 
 function App() {
   return (
@@ -16,7 +17,7 @@ function App() {
         <Route path="/login-Buyer" element={<BuyerAuth />} />
         <Route path="/seller-xyz" element={<SellerProfile />} />
         <Route path="/subscription" element={<Subscription />} />
-        <Route path="/Bookgrid" element={<BookGrid />} />
+        <Route path="/bookList" element={<BookGrid />} />
       </Routes>
     </Router>
   );

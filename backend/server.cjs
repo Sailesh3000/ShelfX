@@ -9,13 +9,34 @@ const multer = require("multer");
 const app = express();
 const port = 5000;
 
-// Middleware
+// Global variable to store the user ID
+let globalUserId = null;
+
 app.use(cors({
-  origin: 'http://localhost:5173', // React app URL
+  origin: 'http://localhost:5173',
   credentials: true,
 }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+// In-memory session store
+app.use(session({
+  secret: 'your_secret_key',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    expires: 24 * 60 * 60 * 1000,
+    sameSite: 'None',
+    secure: false
+  }
+}));
+
+// Serve static files from React build directory
+app.use(express.static(path.join(__dirname, 'build')));
+app.use((req, res, next) => {
+  console.log("Session data:", req.session);
+  next();
+});
 
 // Setup Multer for handling file uploads
 const storage = multer.memoryStorage();
@@ -28,23 +49,6 @@ const db = mysql.createPool({
   password: "",
   database: "ShelfX",
 });
-
-// Utility function to manage globalUserId in a safe way
-const UserSession = {
-  _globalUserId: null,
-
-  get userId() {
-    return this._globalUserId;
-  },
-
-  set userId(id) {
-    this._globalUserId = id;
-  },
-
-  clear() {
-    this._globalUserId = null;
-  }
-};
 
 // Sign up endpoint
 app.post('/SignupSeller', async (req, res) => {
@@ -70,7 +74,7 @@ app.post('/LoginSeller', async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const sql = 'SELECT id, password FROM users WHERE email = ?';
+    const sql = 'SELECT id, email, password FROM users WHERE email = ?';
     const [rows] = await db.query(sql, [email]);
 
     if (rows.length === 0) {
@@ -81,8 +85,15 @@ app.post('/LoginSeller', async (req, res) => {
     const isMatch = await bcrypt.compare(password, hashedPassword);
 
     if (isMatch) {
-      UserSession.userId = rows[0].id; // Set user ID using UserSession
-      res.status(200).send('Login successful');
+      globalUserId = rows[0].id; // Store user ID in the global variable
+      req.session.userId = globalUserId; // Store user ID in session for fallback
+      req.session.save(err => {
+        if (err) {
+          console.error("Session save error:", err);
+          return res.status(500).send('Server error');
+        }
+        res.status(200).send('Login successful');
+      });
     } else {
       res.status(401).send('Invalid email or password');
     }
@@ -233,7 +244,6 @@ app.post('/LoginBuyer', async (req, res) => {
   }
 });
 
-// Start the server
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });

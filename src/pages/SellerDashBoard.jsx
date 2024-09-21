@@ -143,7 +143,8 @@ const SellerProfile = () => {
       setSnackbar({ open: true, message: 'Failed to remove book. Please try again.', severity: 'error' });
     }
   };
-
+  
+  
   const handleLogout = async () => {
     try {
       const response = await axios.post('http://localhost:5000/logout', {}, {
