@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
-const LoginSeller = ({ onToggle }) => {
+const LoginBuyer = ({ onToggle }) => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -20,7 +20,7 @@ const LoginSeller = ({ onToggle }) => {
     e.preventDefault();
 
     try {
-      const response = await fetch('http://localhost:5000/LoginSeller', {
+      const response = await fetch('http://localhost:5000/LoginBuyer', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -33,7 +33,7 @@ const LoginSeller = ({ onToggle }) => {
 
       if (response.ok) {
       
-        navigate('/seller-xyz'); // Redirect to Seller Profile page
+        navigate('/BookGrid'); // Redirect to Seller Profile page
       } else {
         alert('Invalid username or password');
       }
@@ -48,7 +48,7 @@ const LoginSeller = ({ onToggle }) => {
       <div className="w-full bg-[#393E46] rounded-lg shadow md:mt-0 sm:max-w-md xl:p-0">
         <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
           <h1 className="text-2xl text-[#FFD369] tracking-tight font-extrabold mb-4">
-            Login to your account
+            Login to your Buying account
           </h1>
           <form className="space-y-4 md:space-y-6" onSubmit={handleSubmit}>
             <div>
@@ -93,4 +93,4 @@ const LoginSeller = ({ onToggle }) => {
   );
 };
 
-export default LoginSeller;
+export default LoginBuyer;
