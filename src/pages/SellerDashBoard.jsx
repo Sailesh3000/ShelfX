@@ -3,6 +3,7 @@ import { FaUserCircle } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, CircularProgress, Snackbar, Alert } from '@mui/material';
+import RequestList from '../components/RequestList';
 
 const SellerProfile = () => {
   const [activeTab, setActiveTab] = useState('myBooks'); 
@@ -12,6 +13,7 @@ const SellerProfile = () => {
   const [loading, setLoading] = useState(true);
   const [uploadedImages, setUploadedImages] = useState([]);
   const [formData, setFormData] = useState({
+    bookName: '',
     address: '',
     pincode: '',
     price: '',
@@ -59,14 +61,15 @@ const SellerProfile = () => {
   };
 
   const handleSubmit = async () => {
-    const { address, pincode, price } = formData;
+    const { bookName,address, pincode, price } = formData;
 
-    if (!address || !pincode || !price) {
+    if (!bookName || !address || !pincode || !price) {
       setSnackbar({ open: true, message: 'Please fill in all fields', severity: 'warning' });
       return;
     }
 
     const data = new FormData();
+    data.append('bookName', bookName);
     data.append('address', address);
     data.append('pincode', pincode);
     data.append('price', price);
@@ -94,19 +97,15 @@ const SellerProfile = () => {
         console.error('Upload failed:', response.data);
         setSnackbar({ open: true, message: 'Upload failed. Please try again.', severity: 'error' });
       }
-    } catch (error) {
-<<<<<<< HEAD
-      if (error.response?.status === 403 && error.response?.data?.redirect) {
+    }  catch (error) {
+      if (error.response && error.response.status === 403) {
         window.location.href = error.response.data.redirect;
       } else {
-        console.error("Error uploading book:", error);
-        alert('Error uploading the book. Please check your subscription or try again.');
+        console.error('Failed to upload book:', error);
+        setSnackbar({ open: true, message: 'Failed to upload book. Please try again.', severity: 'error' });
       }
-=======
-      console.error('Failed to upload book:', error);
-      setSnackbar({ open: true, message: 'Failed to upload book. Please try again.', severity: 'error' });
-    }
   };
+}
 
   const fetchUserDetails = async () => {
     try {
@@ -149,7 +148,6 @@ const SellerProfile = () => {
     } catch (error) {
       console.error("Error removing book:", error);
       setSnackbar({ open: true, message: 'Failed to remove book. Please try again.', severity: 'error' });
->>>>>>> c337f682088f5d216926ccef5e24eded1635594b
     }
   };
   
@@ -203,7 +201,7 @@ const SellerProfile = () => {
           <button
             type="button"
             onClick={handleLogout}
-            className="text-white font-medium rounded-lg text-sm px-2 py-1 text-center hover:text-[#FFD369] focus:bg-[#ecc363]"
+            className="text-white font-medium rounded-lg text-sm px-2 py-1 text-center hover:text-[#FFD369]"
           >
             Logout
           </button>
@@ -229,9 +227,6 @@ const SellerProfile = () => {
                 </button>
               </div>
               <div className="bg-[#393E46] text-white flex flex-col items-center justify-center w-52 h-36 rounded-md shadow-md">
-                <button className="text-[#FFD369] font-semibold">Manage rental requests</button>
-              </div> 
-              <div className="bg-[#393E46] text-white flex flex-col items-center justify-center w-52 h-36 rounded-md shadow-md">
               <button 
             onClick={() => handleTabClick('showBoooks')} 
             
@@ -250,6 +245,7 @@ const SellerProfile = () => {
                   <div key={book.id} className="bg-white p-4 border rounded-md shadow-md flex flex-col justify-between min-h-[350px] w-[250px]">
                     <img src={book.imageUrl} alt={`Uploaded ${book.address}`} className="max-w-full max-h-[300px] object-cover rounded-md mb-2" />
                     <div className="mt-2">
+                    <p className="text-[#393E46]"><strong>Book Name:</strong> {book.bookName}</p>
                       <p className="text-[#393E46]"><strong>Address:</strong> {book.address}</p>
                       <p className="text-[#393E46]"><strong>Pincode:</strong> {book.pincode}</p>
                       <p className="text-[#393E46]"><strong>Price:</strong> ${book.price}</p>
@@ -296,9 +292,22 @@ const SellerProfile = () => {
       </div>
     )}
     <TextField
+          id="bookName"  // Add this ID
+          label="Book Name"  // New input label
+          variant="filled"
+          value={formData.bookName}  // Bind value
+          onChange={handleInputChange}  // Handle change
+          fullWidth
+          className="mt-4"
+          sx={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: '4px',
+          }}
+    />
+    <TextField
       id="address"
       label="Address"
-      variant="outlined"
+      variant="filled"
       value={formData.address}
       onChange={handleInputChange}
       fullWidth
@@ -311,7 +320,7 @@ const SellerProfile = () => {
     <TextField
       id="pincode"
       label="Pincode"
-      variant="outlined"
+      variant="filled"
       value={formData.pincode}
       onChange={handleInputChange}
       fullWidth
@@ -324,7 +333,7 @@ const SellerProfile = () => {
     <TextField
       id="price"
       label="Price"
-      variant="outlined"
+      variant="filled"
       value={formData.price}
       onChange={handleInputChange}
       fullWidth
@@ -352,6 +361,7 @@ const SellerProfile = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
+      <RequestList sellerId={user.id} />
     </div>
   );
 };

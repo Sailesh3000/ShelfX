@@ -3,12 +3,11 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Home from './pages/Home';
 import SellerAuth from './pages/SellerAuth';
 import BuyerAuth from './pages/BuyerAuth';
-import BookGrid from './components/BookGrid';
+import BookGrid from './pages/BookGrid';
 import SellerProfile from './pages/SellerDashBoard';
 import Subscription from './pages/Subscription';
-import BookGrid from './pages/BookGrid';
 import AdminLogin from './components/AdminLogin';
-import AdminDashboard from './components/AminDashboard';
+import AdminDashboard from './components/AdminDashboard';
 
 function App() {
   return (
@@ -19,7 +18,7 @@ function App() {
         <Route path="/login-Buyer" element={<BuyerAuth />} />
         <Route path="/seller-xyz" element={<SellerProfile />} />
         <Route path="/subscription" element={<Subscription />} />
-        <Route path="/bookList" element={<BookGrid />} />
+        <Route path="/BookGrid" element={<BookGrid />} />
         <Route path="/adminLogin" element={<AdminLogin />} />
         <Route path="/adminDashboard" element={<AdminDashboard />} />
       </Routes>
