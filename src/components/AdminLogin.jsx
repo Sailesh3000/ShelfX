@@ -14,11 +14,11 @@ const AdminLogin = () => {
 
     const handleLogin = async () => {
         try {
-            const response = await axios.post('http://localhost:5000/adminLogin', formData);
+            const response = await axios.post('http://localhost:5000/adminStatus', formData);
             
             if (response.status === 200) {
-                const redirectPath = response.data.redirect || '/defaultRedirect';
-                navigate(redirectPath);
+                
+                navigate('/adminDashboard');
             }
         } catch (error) {
             if (error.response) {

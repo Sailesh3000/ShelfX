@@ -26,9 +26,9 @@ const RequestList = ({ sellerId }) => {
     }
   }, [sellerId]);
 
-  const handleApproveRequest = async (bookId, sellerId) => {
+  const handleApproveRequest = async (bookId, sellerId, userId) => {
     try {
-      await axios.put(`http://localhost:5000/requests/${bookId}/approve`, { sellerId });
+      await axios.put(`http://localhost:5000/requests/${bookId}/approve`, { sellerId, userId });
       setRequests((prevRequests) =>
         prevRequests.map((req) =>
           req.bookId === bookId && req.id === sellerId ? { ...req, status: 'approved' } : req
@@ -39,9 +39,9 @@ const RequestList = ({ sellerId }) => {
     }
   };
 
-  const handleRejectRequest = async (bookId, sellerId) => {
+  const handleRejectRequest = async (bookId, sellerId, userId) => {
     try {
-      await axios.put(`http://localhost:5000/requests/${bookId}/reject`, { sellerId });
+      await axios.put(`http://localhost:5000/requests/${bookId}/reject`, { sellerId, userId });
       setRequests((prevRequests) =>
         prevRequests.map((req) =>
           req.bookId === bookId && req.id === sellerId ? { ...req, status: 'rejected' } : req
@@ -81,13 +81,13 @@ const RequestList = ({ sellerId }) => {
                   <>
                     <button
                       className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
-                      onClick={() => handleApproveRequest(request.bookId, request.id)}
+                      onClick={() => handleApproveRequest(request.bookId, request.id, request.userId)}
                     >
                       Approve
                     </button>
                     <button
                       className="ml-4 bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
-                      onClick={() => handleRejectRequest(request.bookId, request.id)}
+                      onClick={() => handleRejectRequest(request.bookId, request.id,request.userId)}
                     >
                       Reject
                     </button>

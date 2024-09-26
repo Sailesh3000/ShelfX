@@ -8,6 +8,18 @@ const SignupSeller = ({ onToggle }) => {
     confirmPassword: '',
   });
 
+  const [errors, setErrors] = useState({
+    email: '',
+    password: '',
+    confirmPassword: '',
+  });
+
+  // Email validation regex
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  // Password validation (at least 8 characters, one letter, one number, and one special character)
+  const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -16,11 +28,40 @@ const SignupSeller = ({ onToggle }) => {
     });
   };
 
+  const validateForm = () => {
+    let isValid = true;
+    const newErrors = {
+      email: '',
+      password: '',
+      confirmPassword: '',
+    };
+
+    // Validate email
+    if (!emailRegex.test(formData.email)) {
+      newErrors.email = 'Invalid email format.';
+      isValid = false;
+    }
+
+    // Validate password
+    if (!passwordRegex.test(formData.password)) {
+      newErrors.password = 'Password must be at least 8 characters long, include a number and a special character.';
+      isValid = false;
+    }
+
+    // Check if passwords match
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match!';
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match!');
+    if (!validateForm()) {
       return;
     }
 
@@ -46,7 +87,6 @@ const SignupSeller = ({ onToggle }) => {
       alert('An error occurred. Please try again.');
     }
   };
-
 
   return (
     <div className="justify-center px-4 lg:py-0 w-[500px] sm:px-8 sm:gap-2">
@@ -81,6 +121,7 @@ const SignupSeller = ({ onToggle }) => {
                 placeholder="name@company.com" 
                 required 
               />
+              {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
             </div>
             <div>
               <label htmlFor="password" className="block mb-2 text-sm font-medium text-[#FFD369]">Password</label>
@@ -94,6 +135,7 @@ const SignupSeller = ({ onToggle }) => {
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FFD369] focus:border-[#FFD369] block w-full p-2.5" 
                 required 
               />
+              {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
             </div>
             <div>
               <label htmlFor="confirm-password" className="block mb-2 text-sm font-medium text-[#FFD369]">Confirm password</label>
@@ -107,6 +149,7 @@ const SignupSeller = ({ onToggle }) => {
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FFD369] focus:border-[#FFD369] block w-full p-2.5" 
                 required 
               />
+              {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>}
             </div>
             <div className="flex items-start">
               <div className="flex items-center h-5">

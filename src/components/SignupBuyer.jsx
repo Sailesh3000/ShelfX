@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+
 const SignupBuyer = ({ onToggle }) => {
   const [formData, setFormData] = useState({
     username: '',
     email: '',
     password: '',
     confirmPassword: '',
-    pincode:'',
-    state:'',
+    pincode: '',
+    state: '',
   });
-const navigate =useNavigate();
+  const [errors, setErrors] = useState({});
+  const navigate = useNavigate();
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -18,13 +21,43 @@ const navigate =useNavigate();
     });
   };
 
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.(com|in)$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePassword = (password) => {
+    const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    return passwordRegex.test(password);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const validationErrors = {};
 
+    // Email validation
+    if (!validateEmail(formData.email)) {
+      validationErrors.email = 'Invalid email format. Email must contain @ and end with .com or .in';
+    }
+
+    // Password validation
+    if (!validatePassword(formData.password)) {
+      validationErrors.password =
+        'Password must be at least 8 characters long, include one uppercase letter, one lowercase letter, one number, and one special character.';
+    }
+
+    // Confirm Password validation
     if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match!');
+      validationErrors.confirmPassword = 'Passwords do not match!';
+    }
+
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
       return;
     }
+
+    // Clear errors if no validation errors
+    setErrors({});
 
     try {
       const response = await fetch('http://localhost:5000/SignupBuyer', {
@@ -34,8 +67,8 @@ const navigate =useNavigate();
           username: formData.username,
           email: formData.email,
           password: formData.password,
-          pincode:formData.pincode,
-          state:formData.state,
+          pincode: formData.pincode,
+          state: formData.state,
         }),
       });
 
@@ -51,7 +84,6 @@ const navigate =useNavigate();
       alert('An error occurred. Please try again.');
     }
   };
-
 
   return (
     <div className="justify-center px-4 lg:py-0 w-[500px] sm:px-8 sm:gap-2">
@@ -90,6 +122,7 @@ const navigate =useNavigate();
                 placeholder="name@company.com"
                 required
               />
+              {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
             </div>
             <div>
               <label htmlFor="password" className="block mb-2 text-sm font-medium text-[#FFD369]">
@@ -105,6 +138,7 @@ const navigate =useNavigate();
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FFD369] focus:border-[#FFD369] block w-full p-2.5"
                 required
               />
+              {errors.password && <p className="text-red-500 text-sm">{errors.password}</p>}
             </div>
             <div>
               <label htmlFor="confirm-password" className="block mb-2 text-sm font-medium text-[#FFD369]">
@@ -120,10 +154,14 @@ const navigate =useNavigate();
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FFD369] focus:border-[#FFD369] block w-full p-2.5"
                 required
               />
+              {errors.confirmPassword && <p className="text-red-500 text-sm">{errors.confirmPassword}</p>}
             </div>
-            <div className='flex items-start'>
+            {/* Pincode and State inputs */}
+            <div className="flex items-start">
               <div>
-                <label htmlFor="pincode" className="block mb-2 text-sm font-medium text-[#FFD369]">Pincode</label>
+                <label htmlFor="pincode" className="block mb-2 text-sm font-medium text-[#FFD369]">
+                  Pincode
+                </label>
                 <input
                   type="number"
                   name="pincode"
@@ -135,8 +173,10 @@ const navigate =useNavigate();
                   required
                 />
               </div>
-              <div className='ml-[10px]'>
-                <label htmlFor="state" className="block mb-2 text-sm font-medium text-[#FFD369]">State</label>
+              <div className="ml-[10px]">
+                <label htmlFor="state" className="block mb-2 text-sm font-medium text-[#FFD369]">
+                  State
+                </label>
                 <select
                   id="state"
                   name="state"
@@ -148,7 +188,7 @@ const navigate =useNavigate();
                   <option value="">--Please choose a state--</option>
                   {['Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat',
                    'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra',
-                    'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 
+                    'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu',
                     'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal'].map((state) => (
                     <option key={state} value={state}>
                       {state}
@@ -175,18 +215,18 @@ const navigate =useNavigate();
             </div>
             <button
               type="submit"
-              className="w-full text-gray-900 bg-[#FFD369] hover:bg-yellow-500 focus:ring-4 focus:outline-none focus:ring-[#FFD369] font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+              className="w-full text-black bg-[#FFD369] hover:bg-[#FFD369] focus:ring-4 focus:outline-none font-medium rounded-lg text-sm px-5 py-2.5 text-center"
             >
               Create an account
             </button>
             <p className="text-sm font-light text-white">
-              Already have an account? <a href="#" onClick={onToggle} className="font-medium text-[#FFD369] hover:underline">Login here</a>
+              Already have an account? <a className="font-medium text-[#FFD369] hover:underline" onClick={onToggle}>Login here</a>
             </p>
           </form>
         </div>
       </div>
     </div>
   );
-}  
+};
 
 export default SignupBuyer;

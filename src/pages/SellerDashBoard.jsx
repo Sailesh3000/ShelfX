@@ -4,11 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, CircularProgress, Snackbar, Alert } from '@mui/material';
 import RequestList from '../components/RequestList';
-
+import bcrypt from 'bcryptjs';
 const SellerProfile = () => {
   const [activeTab, setActiveTab] = useState('myBooks'); 
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [openpassDialog, setOpenpassDialog] = useState(false);
+  const [opennameDialog, setOpennameDialog] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [uploadedImages, setUploadedImages] = useState([]);
@@ -19,7 +21,26 @@ const SellerProfile = () => {
     price: '',
   });
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [formData1, setFormData1] = useState({
+    username: '',
+    
+    password: '',
+    confirmPassword: '',
+  });
+  const [formData2, setFormData2] = useState({
+   
+    password: '',
+    newpassword:'',
+    confirmPassword: '',
+  });
 
+  const handleChange2 = (e) => {
+    const { name, value } = e.target;
+    setFormData2({
+      ...formData2,
+      [name]: value,
+    });
+  };
   const navigate = useNavigate(); 
 
   const handleSnackbarClose = () => {
@@ -32,6 +53,8 @@ const SellerProfile = () => {
 
   const handleDialogClose = () => {
     setOpenDialog(false);
+    setOpenpassDialog(false);
+    setOpennameDialog(false);
     setSelectedImage(null);
     setFormData({ address: '', pincode: '', price: '' });
   };
@@ -150,7 +173,90 @@ const SellerProfile = () => {
       setSnackbar({ open: true, message: 'Failed to remove book. Please try again.', severity: 'error' });
     }
   };
+  //////////////////////////////
+  const handleChange1 = (e) => {
+    const { name, value } = e.target;
+    console.log(`Changed: ${name} = ${value}`);
+    setFormData1({
+      ...formData1,
+      [name]: value,
+    });
+  };
   
+  const handleSubmitname = async (e) => {
+    e.preventDefault();
+    
+    console.log('Form Password:', formData1.password);
+    console.log('User Password:', user.password); // Ensure correct casing
+  
+    // Ensure that user.password and formData1.password are properly defined.
+    const passwordMatch = await bcrypt.compare(formData1.password, user.password);
+    
+    if (!passwordMatch) {
+      alert('Passwords do not match!');
+      return;
+    }
+  
+    try {
+      const response = await fetch('http://localhost:5000/Edituserprofile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: formData1.username,
+        }),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+  
+      const data = await response.json(); // Parse JSON response
+  
+      if (data.message === 'Username updated successfully') {
+        alert('Username updated successfully!');
+        // Optionally, clear the form fields
+        // setFormData1({ username: '', password: '' });
+      } else {
+        alert('Update failed: ' + data.message); // Provide the server's error message
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('An error occurred. Please try again.');
+    }
+  };
+  
+  const handleSubmitpassword = async (e) => {
+    e.preventDefault();
+    console.log('Form Password:', formData2.password);
+    console.log('User Password:', user.Password);
+    
+    // Ensure that user.Password and formData1.password are properly defined.
+    const passwordMatch = await bcrypt.compare(formData2.password, user.password);
+    if (!passwordMatch || formData2.newpassword!== formData2.confirmpassword ) {
+      alert('Passwords do not match!');
+      return;
+    }
+  
+    try {
+      const response = await fetch('http://localhost:5000/Edituserprofile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          newpassword: formData2.newpassword,
+        }),
+      });
+  
+      const data = await response.json(); // Parse JSON response
+      if (data.message === 'password updated successfully') {
+        alert('password updated successfully!');
+      } else {
+        alert('Update failed');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('An error occurred. Please try again.');
+    }
+  };
   
   const handleLogout = async () => {
     try {
@@ -213,7 +319,23 @@ const SellerProfile = () => {
         {activeTab === 'home' ? (
           <div>
             <h2 className="text-2xl font-bold text-[#222831]">Welcome to ShelfX!</h2>
-            <p className="text-[#393E46] mt-4">Explore our platform to list, rent, and manage your books efficiently.</p>
+            <div className='flex flex-between '>
+            <div className="bg-[#393E46] text-white flex flex-col items-center mt-4 justify-center w-52 h-36 rounded-md shadow-md mr-[20px]">
+              <button 
+                className="text-[#FFD369] font-semibold" 
+                onClick={() => setOpenpassDialog(true)}
+              >
+                Change your password 
+              </button>
+            </div>
+            <div className="bg-[#393E46] text-white flex flex-col items-center mt-4 justify-center w-52 h-36 rounded-md shadow-md">
+              <button 
+                className="text-[#FFD369] font-semibold" 
+                onClick={() => setOpennameDialog(true)}
+              >
+                Change your name
+              </button>
+            </div></div>
           </div>
         ) : activeTab === 'myBooks' ? (
           <div className="flex flex-wrap gap-4">
@@ -353,7 +475,84 @@ const SellerProfile = () => {
     </Button>
   </DialogActions>
 </Dialog>
+<Dialog open={opennameDialog} onClose={handleDialogClose} maxWidth="sm" fullWidth>
+  <DialogTitle sx={{ backgroundColor: '#393E46', color: '#FFFFFF', fontWeight: 'bold' }}>
+    Change Your Name
+  </DialogTitle>
+  <DialogContent sx={{ backgroundColor: '#EEEEEE', paddingTop: '16px' }}>
+    <TextField
+      name="password"
+      label="Current Password"
+      variant="outlined"
+      type="password"
+      value={formData1.password}
+      onChange={handleChange1}
+      fullWidth
+      className="mt-4"
+      sx={{ backgroundColor: '#FFFFFF', borderRadius: '4px' }}
+    />
+    <TextField
+      name="username"
+      label="Username"
+      variant="outlined"
+      value={formData1.username}
+      onChange={handleChange1}
+      fullWidth
+      className="mt-4"
+      sx={{ backgroundColor: '#FFFFFF', borderRadius: '4px' }}
+    />
+  </DialogContent>
+  <DialogActions sx={{ backgroundColor: '#FFD369', padding: '16px' }}>
+    <Button onClick={handleDialogClose} color="secondary" variant="outlined">Cancel</Button>
+    <Button onClick={ handleSubmitname} color="primary" variant="contained">Submit</Button>
+  </DialogActions>
+</Dialog>
 
+ {/* /////////////////////////////////// chnaging password ////////////////  */}
+ <Dialog open={openpassDialog} onClose={handleDialogClose} maxWidth="sm" fullWidth>
+  <DialogTitle sx={{ backgroundColor: '#393E46', color: '#FFFFFF', fontWeight: 'bold' }}>
+    Change Your Name
+  </DialogTitle>
+  <DialogContent sx={{ backgroundColor: '#EEEEEE', paddingTop: '16px' }}>
+    <TextField
+      name="password"
+      label="Current Password"
+      variant="outlined"
+      type="password"
+      value={formData2.password}
+      onChange={handleChange2}
+      fullWidth
+      className="mt-4"
+      sx={{ backgroundColor: '#FFFFFF', borderRadius: '4px' }}
+    />
+    <TextField
+      name="newpassword"
+      label="newpassword"
+      variant="outlined"
+        type="newpassword"
+      value={formData2.newpassword}
+      onChange={handleChange2}
+      fullWidth
+      className="mt-4"
+      sx={{ backgroundColor: '#FFFFFF', borderRadius: '4px' }}
+    />
+     <TextField
+      name="confirmpassword"
+      label="confirmpassword"
+      variant="outlined"
+        type="confirmpassword"
+      value={formData2.confirmpassword}
+      onChange={handleChange2}
+      fullWidth
+      className="mt-4"
+      sx={{ backgroundColor: '#FFFFFF', borderRadius: '4px' }}
+    />
+  </DialogContent>
+  <DialogActions sx={{ backgroundColor: '#FFD369', padding: '16px' }}>
+    <Button onClick={handleDialogClose} color="secondary" variant="outlined">Cancel</Button>
+    <Button onClick={handleSubmitpassword} color="primary" variant="contained">Submit</Button>
+  </DialogActions>
+</Dialog>
 
       {/* Snackbar for Notifications */}
       <Snackbar open={snackbar.open} autoHideDuration={6000} onClose={handleSnackbarClose}>
