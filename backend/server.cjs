@@ -22,7 +22,8 @@ app.use(
     credentials: true,
   })
 );
-app.use(bodyParser.json());
+
+app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // In-memory session store
@@ -108,6 +109,10 @@ app.post("/LoginSeller", async (req, res) => {
   }
 });
 
+
+
+
+
 app.post("/uploadBook", upload.single("image"), async (req, res) => {
   const userId = globalUserId;
 
@@ -173,7 +178,7 @@ app.post("/uploadBook", upload.single("image"), async (req, res) => {
   }
 });
 
-// User details endpoint
+
 app.get("/details", async (req, res) => {
   const userId = globalUserId; // Get user ID from UserSession
 
@@ -649,6 +654,36 @@ app.get("/status", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
+app.post("/adminLogin", async (req, res) => {
+  console.log('Request body:', req.body);
+  const { username, password } = req.body;
+  try {
+    // Query the database for the user with the given username
+    const sql = "SELECT * FROM admin WHERE username = ?";
+    const results = await db.query(sql, [username]);
+
+    if (results.length > 0) {
+      const admin = results[0];
+
+      if (admin.password === password) {
+        console.log('Login successful for:', username);
+        return res.status(200).json({ message: 'Login successful', redirect: 'http://localhost:5000/adminDashboard' });
+      } else {
+        console.log('Invalid credentials for:', username);
+        return res.status(401).json({ message: 'Invalid credentials' });
+      }
+    } else {
+      console.log('User not found:', username);
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+  } catch (err) {
+    console.error("Error during login:", err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
