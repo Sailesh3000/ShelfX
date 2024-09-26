@@ -395,6 +395,29 @@ app.get("/sellers", async (req, res) => {
   }
 });
 
+app.get("/buyers", async (req, res) => {
+  try {
+    const sql = "SELECT id, username, email FROM buyers";
+    const [rows] = await db.query(sql);
+    res.status(200).json(rows);
+  } catch (err) {
+    console.error("Error fetching sellers:", err);
+    res.status(500).send("Server error");
+  }
+});
+
+app.get("/subscriptions", async (req, res) => {
+  try {
+    const sql = "SELECT id, userId, plan FROM subscriptions";
+    const [rows] = await db.query(sql);
+    res.status(200).json(rows);
+  } catch (err) {
+    console.error("Error fetching sellers:", err);
+    res.status(500).send("Server error");
+  }
+});
+
+
 // Update seller
 app.put("/seller/:id", async (req, res) => {
   const { id } = req.params;
@@ -406,6 +429,20 @@ app.put("/seller/:id", async (req, res) => {
     res.status(200).send("Seller updated successfully");
   } catch (err) {
     console.error("Error updating seller:", err);
+    res.status(500).send("Server error");
+  }
+});
+
+app.put("/buyer/:id", async (req, res) => {
+  const { id } = req.params;
+  const { username, email } = req.body;
+
+  try {
+    const sql = "UPDATE buyers SET username = ?, email = ? WHERE id = ?";
+    await db.query(sql, [username, email, id]);
+    res.status(200).send("Buyer updated successfully");
+  } catch (err) {
+    console.error("Error updating buyer:", err);
     res.status(500).send("Server error");
   }
 });
@@ -424,9 +461,42 @@ app.delete("/seller/:id", async (req, res) => {
   }
 });
 
+app.delete("/buyer/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const sql = "DELETE FROM buyers WHERE id = ?";
+    await db.query(sql, [id]);
+    res.status(200).send("Seller deleted successfully");
+  } catch (err) {
+    console.error("Error deleting seller:", err);
+    res.status(500).send("Server error");
+  }
+});
+
 app.get("/books/count", async (req, res) => {
   try {
     const [rows] = await db.query("SELECT COUNT(*) as count FROM books");
+    res.json({ count: rows[0].count });
+  } catch (err) {
+    console.error("Error fetching book count:", err);
+    res.status(500).send("Server error");
+  }
+});
+
+app.get("/countSellers", async (req, res) => {
+  try {
+    const [rows] = await db.query("SELECT COUNT(*) as count FROM users");
+    res.json({ count: rows[0].count });
+  } catch (err) {
+    console.error("Error fetching book count:", err);
+    res.status(500).send("Server error");
+  }
+});
+
+app.get("/countBuyers", async (req, res) => {
+  try {
+    const [rows] = await db.query("SELECT COUNT(*) as count FROM buyers");
     res.json({ count: rows[0].count });
   } catch (err) {
     console.error("Error fetching book count:", err);

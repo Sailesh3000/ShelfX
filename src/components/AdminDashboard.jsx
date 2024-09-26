@@ -29,12 +29,17 @@ const AdminDashboard = () => {
     { id: 2, name: "Jane Smith", email: "jane@example.com", role: "User" },
   ]);
   const [sellers, setSellers] = useState([]);
+  const [buyers, setBuyers] = useState([]); // New state for buyers
+  const [subs, setSubs] = useState([]);
   const [booksUploaded, setBooksUploaded] = useState(0);
+  const [sellCount,setSellCount] = useState(0);
+  const [buyCount, setBuyCount] = useState(0);
   const [activeTab, setActiveTab] = useState(0);
   const [editSeller, setEditSeller] = useState(null);
+  const [editBuyer, setEditBuyer] = useState(null); // Add this state
   const [open, setOpen] = useState(false);
 
-  // Fetch sellers from the users table
+  // Fetch sellers and buyers from the database
   useEffect(() => {
     const fetchSellers = async () => {
       try {
@@ -42,6 +47,15 @@ const AdminDashboard = () => {
         setSellers(response.data);
       } catch (err) {
         console.error("Error fetching sellers:", err);
+      }
+    };
+
+    const fetchBuyers = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/buyers");
+        setBuyers(response.data);
+      } catch (err) {
+        console.error("Error fetching buyers:", err);
       }
     };
 
@@ -54,19 +68,51 @@ const AdminDashboard = () => {
       }
     };
 
+    const getCountSellers = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/countSellers");
+        setSellCount(response.data.count);
+      } catch (err) {
+        console.error("Error fetching books count:", err);
+      }
+    };
+
+    const getCountBuyers = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/countBuyers");
+        setBuyCount(response.data.count);
+      } catch (err) {
+        console.error("Error fetching books count:", err);
+      }
+    };
+
+
+    const fetchSubscriptions = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/subscriptions");
+        setSubs(response.data);
+      } catch (err) {
+        console.error("Error fetching books count:", err);
+      }
+    };
+
     fetchSellers();
+    fetchSubscriptions();
+    getCountBuyers();
+    getCountSellers();
+    fetchBuyers(); // Fetch buyers as well
     fetchBooksCount();
   }, []);
 
   // Data for Pie Chart
   const userData = [
     {
-      name: "Admins",
-      value: users.filter((user) => user.role === "Admin").length,
+      name: "Sellers",
+      value: parseInt(sellCount),
     },
     {
-      name: "Users",
-      value: users.filter((user) => user.role === "User").length,
+      name: "Buyers",
+      value: parseInt(buyCount),
     },
   ];
 
@@ -76,12 +122,17 @@ const AdminDashboard = () => {
     setActiveTab(newValue);
   };
 
-  const handleEditClick = (seller) => {
-    setEditSeller(seller);
+  const handleEditClick = (person, type) => {
+    if (type === 'seller') {
+      setEditSeller(person);
+    } else if (type === 'buyer') {
+      setEditBuyer(person);
+    }
     setOpen(true);
   };
+  
 
-  const handleDeleteClick = async (id) => {
+  const handleDeleteClickSeller = async (id) => {
     try {
       await axios.delete(`http://localhost:5000/seller/${id}`);
       setSellers(sellers.filter((seller) => seller.id !== id));
@@ -90,7 +141,16 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleSave = async () => {
+  const handleDeleteClickBuyer = async (id) => {
+    try {
+      await axios.delete(`http://localhost:5000/buyer/${id}`);
+      setBuyers(buyers.filter((buyer) => buyer.id !== id));
+    } catch (err) {
+      console.error("Error deleting seller:", err);
+    }
+  };
+
+  const handleSaveSeller = async () => {
     try {
       await axios.put(
         `http://localhost:5000/seller/${editSeller.id}`,
@@ -107,6 +167,25 @@ const AdminDashboard = () => {
       console.error("Error saving seller:", err);
     }
   };
+
+  const handleSaveBuyer = async () => {
+    try {
+      await axios.put(
+        `http://localhost:5000/buyer/${editBuyer.id}`,
+        editBuyer
+      );
+      setBuyers(
+        buyers.map((buyer) =>
+          buyer.id === editBuyer.id ? editBuyer : buyer
+        )
+      );
+      setOpen(false);
+      setEditSeller(null);
+    } catch (err) {
+      console.error("Error saving seller:", err);
+    }
+  };
+
 
   return (
     <>
@@ -184,6 +263,8 @@ const AdminDashboard = () => {
           <Box sx={{ width: "100%", marginTop: "20px" }}>
             <Tabs value={activeTab} onChange={handleTabChange}>
               <Tab label="Sellers" sx={{ color: "#FFFFFF" }} />
+              <Tab label="Buyers" sx={{ color: "#FFFFFF" }} /> {/* New Buyers Tab */}
+              <Tab label="Subscriptions" sx={{ color: "#FFFFFF" }} />
             </Tabs>
             <TabPanel value={activeTab} index={0}>
               <h4 style={{ color: "#FFD369" }}>Sellers Information</h4>
@@ -260,7 +341,7 @@ const AdminDashboard = () => {
                       >
                         <Button
                           variant="contained"
-                          onClick={() => handleEditClick(seller)}
+                          onClick={() => handleEditClick(seller,'seller')}
                           sx={{ padding: "4px", marginRight: "8px" }} // Add margin here
                         >
                           Edit
@@ -268,7 +349,7 @@ const AdminDashboard = () => {
                         <Button
                           variant="contained"
                           color="error"
-                          onClick={() => handleDeleteClick(seller.id)}
+                          onClick={() => handleDeleteClickSeller(seller.id)}
                           sx={{ padding: "4px" }}
                         >
                           Delete
@@ -279,96 +360,243 @@ const AdminDashboard = () => {
                 </tbody>
               </table>
             </TabPanel>
+            <TabPanel value={activeTab} index={1}>
+              <h4 style={{ color: "#FFD369" }}>Buyers Information</h4>
+              <table
+                style={{
+                  width: "100%",
+                  color: "#EEE",
+                  marginTop: "10px",
+                  borderCollapse: "collapse",
+                }}
+              >
+                <thead>
+                  <tr>
+                    <th
+                      style={{
+                        border: "1px solid #EEE",
+                        padding: "8px",
+                        textAlign: "left",
+                        width: "20%",
+                      }}
+                    >
+                      ID
+                    </th>
+                    <th
+                      style={{
+                        border: "1px solid #EEE",
+                        padding: "8px",
+                        textAlign: "left",
+                        width: "30%",
+                      }}
+                    >
+                      Name
+                    </th>
+                    <th
+                      style={{
+                        border: "1px solid #EEE",
+                        padding: "8px",
+                        textAlign: "left",
+                        width: "30%",
+                      }}
+                    >
+                      Email
+                    </th>
+                    <th
+                      style={{
+                        border: "1px solid #EEE",
+                        padding: "8px",
+                        textAlign: "center",
+                        width: "20%",
+                      }}
+                    >
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {buyers.map((buyer) => (
+                    <tr key={buyer.id}>
+                      <td style={{ border: "1px solid #EEE", padding: "8px" }}>
+                        {buyer.id}
+                      </td>
+                      <td style={{ border: "1px solid #EEE", padding: "8px" }}>
+                        {buyer.username}
+                      </td>
+                      <td style={{ border: "1px solid #EEE", padding: "8px" }}>
+                        {buyer.email}
+                      </td>
+                      <td
+                        style={{
+                          border: "1px solid #EEE",
+                          padding: "8px",
+                          textAlign: "center",
+                        }}
+                      >
+                        <Button
+                          variant="contained"
+                          onClick={() => handleEditClick(buyer, 'buyer')}
+                          sx={{ padding: "4px", marginRight: "8px" }} // Add margin here
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="contained"
+                          color="error"
+                          onClick={() => handleDeleteClickBuyer(buyer.id)}
+                          sx={{ padding: "4px" }}
+                        >
+                          Delete
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </TabPanel>
+            <TabPanel value={activeTab} index={2}>
+              <h4 style={{ color: "#FFD369" }}>Subscriptions</h4>
+              <table
+                style={{
+                  width: "100%",
+                  color: "#EEE",
+                  marginTop: "10px",
+                  borderCollapse: "collapse",
+                }}
+              >
+                <thead>
+                  <tr>
+                    <th
+                      style={{
+                        border: "1px solid #EEE",
+                        padding: "8px",
+                        textAlign: "left",
+                        width: "20%",
+                      }}
+                    >
+                      ID
+                    </th>
+                    <th
+                      style={{
+                        border: "1px solid #EEE",
+                        padding: "8px",
+                        textAlign: "left",
+                        width: "30%",
+                      }}
+                    >
+                      Seller ID
+                    </th>
+                    <th
+                      style={{
+                        border: "1px solid #EEE",
+                        padding: "8px",
+                        textAlign: "left",
+                        width: "30%",
+                      }}
+                    >
+                      Plan
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {subs.map((sub) => (
+                    <tr key={sub.id}>
+                      <td style={{ border: "1px solid #EEE", padding: "8px" }}>
+                        {sub.id}
+                      </td>
+                      <td style={{ border: "1px solid #EEE", padding: "8px" }}>
+                        {sub.userId}
+                      </td>
+                      <td style={{ border: "1px solid #EEE", padding: "8px" }}>
+                        {sub.plan}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </TabPanel>
           </Box>
 
-          {/* Edit Seller Dialog */}
-          <Dialog
-            open={open}
-            onClose={() => setOpen(false)}
-            sx={{
-              "& .MuiDialog-paper": {
-                backgroundColor: "#393E46", // Match the background color
-                color: "#EEEEEE", // Match the text color
-                borderRadius: "8px",
-                padding: "1rem",
-              },
-            }}
-          >
-            <DialogTitle sx={{ color: "#FFD369" }}>Edit Seller</DialogTitle>
-            <DialogContent>
-              <TextField
-                autoFocus
-                margin="dense"
-                label="UserName"
-                type="text"
-                fullWidth
-                value={editSeller?.username || ""}
-                onChange={(e) =>
-                  setEditSeller({ ...editSeller, username: e.target.value })
-                }
-                sx={{
-                  "& .MuiInputBase-input": {
-                    backgroundColor: "#444B54", // Input field background
-                    color: "#EEEEEE", // Input text color
-                  },
-                  "& .MuiInputLabel-root": {
-                    color: "#FFD369", // Label color
-                  },
-                  "& .MuiInputLabel-root.Mui-focused": {
-                    color: "#FFD369", // Focused label color
-                  },
-                  "& .MuiOutlinedInput-root.Mui-focused fieldset": {
-                    borderColor: "#FFD369", // Border color on focus
-                  },
-                }}
-              />
-              <TextField
-                margin="dense"
-                label="Email"
-                type="email"
-                fullWidth
-                value={editSeller?.email || ""}
-                onChange={(e) =>
-                  setEditSeller({ ...editSeller, email: e.target.value })
-                }
-                sx={{
-                  "& .MuiInputBase-input": {
-                    backgroundColor: "#444B54", // Input field background
-                    color: "#EEEEEE", // Input text color
-                  },
-                  "& .MuiInputLabel-root": {
-                    color: "#FFD369", // Label color
-                  },
-                  "& .MuiInputLabel-root.Mui-focused": {
-                    color: "#FFD369", // Focused label color
-                  },
-                  "& .MuiOutlinedInput-root.Mui-focused fieldset": {
-                    borderColor: "#FFD369", // Border color on focus
-                  },
-                }}
-              />
-            </DialogContent>
-            <DialogActions
-              sx={{
-                backgroundColor: "#393E46",
-                borderTop: "1px solid #444B54",
-              }}
-            >
-              <Button onClick={() => setOpen(false)} sx={{ color: "#FFD369" }}>
-                Cancel
-              </Button>
-              <Button onClick={handleSave} sx={{ color: "#FFD369" }}>
-                Save
-              </Button>
-            </DialogActions>
-          </Dialog>
+          {/* Edit Dialog */}
+          <Dialog open={open} onClose={() => setOpen(false)}>
+  <DialogTitle>
+    {editSeller ? "Edit Seller" : editBuyer ? "Edit Buyer" : "Edit"}
+  </DialogTitle>
+  <DialogContent>
+    {/* Form for editing seller */}
+    {editSeller && (
+      <>
+        <TextField
+          label="Username"
+          fullWidth
+          margin="normal"
+          value={editSeller?.username || ""}
+          onChange={(e) =>
+            setEditSeller({ ...editSeller, username: e.target.value })
+          }
+        />
+        <TextField
+          label="Email"
+          fullWidth
+          margin="normal"
+          value={editSeller?.email || ""}
+          onChange={(e) =>
+            setEditSeller({ ...editSeller, email: e.target.value })
+          }
+        />
+        {/* Additional fields for seller if needed */}
+      </>
+    )}
+
+    {/* Form for editing buyer */}
+    {editBuyer && (
+      <>
+        <TextField
+          label="Username"
+          fullWidth
+          margin="normal"
+          value={editBuyer?.username || ""}
+          onChange={(e) =>
+            setEditBuyer({ ...editBuyer, username: e.target.value })
+          }
+        />
+        <TextField
+          label="Email"
+          fullWidth
+          margin="normal"
+          value={editBuyer?.email || ""}
+          onChange={(e) =>
+            setEditBuyer({ ...editBuyer, email: e.target.value })
+          }
+        />
+        {/* Additional fields for buyer if needed */}
+      </>
+    )}
+  </DialogContent>
+
+  <DialogActions>
+    {editSeller && (
+      <Button onClick={handleSaveSeller} color="primary">
+        Save Seller
+      </Button>
+    )}
+    {editBuyer && (
+      <Button onClick={handleSaveBuyer} color="primary">
+        Save Buyer
+      </Button>
+    )}
+    <Button onClick={() => setOpen(false)} color="secondary">
+      Cancel
+    </Button>
+  </DialogActions>
+</Dialog>
+
         </div>
       </div>
     </>
   );
 };
 
-// TabPanel component
 const TabPanel = (props) => {
   const { children, value, index, ...other } = props;
 
@@ -380,7 +608,7 @@ const TabPanel = (props) => {
       aria-labelledby={`tab-${index}`}
       {...other}
     >
-      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+      {value === index && <Box p={3}>{children}</Box>}
     </div>
   );
 };
