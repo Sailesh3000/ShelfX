@@ -209,6 +209,27 @@ export const uploadBook = async (req, res) => {
     }
 };
 
+export const deleteBook = async(req, res) => {
+      const bookId = req.params.id;
+      const userId = globalUserId;
+    
+      try {
+        const sqlDelete = "DELETE FROM books WHERE id = ? AND userId = ?";
+        const [result] = await db.query(sqlDelete, [bookId, userId]);
+    
+        if (result.affectedRows === 0) {
+          return res
+            .status(404)
+            .json({ message: "Book not found or user not authorized" });
+        }
+    
+        res.status(200).json({ message: "Book deleted successfully" });
+      } catch (err) {
+        console.error("Error deleting book:", err);
+        res.status(500).json({ message: "Server error" });
+      }
+    }
+
 
 export const subscribePlan = async (req, res) => {
     const { selectedPlan } = req.params;

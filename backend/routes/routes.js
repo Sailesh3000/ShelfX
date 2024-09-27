@@ -12,7 +12,8 @@ import {
     editUserProfile,
     deleteSellerById,
     uploadBook,
-    logout
+    logout,
+    deleteBook
 } from "../controllers/sellerController.js"; 
 import { 
     signupBuyer, 
@@ -50,6 +51,7 @@ router.get("/countSellers", getCountSellers);
 router.get("/sellerdetails/:id", getSellerDetailsById);
 router.put("/sellers/:id", updateSellerDetailsById);
 router.delete("/sellers/:id", deleteSellerById);
+router.delete("/deleteBook/:id",deleteBook);
 router.post("/logout", logout);
 
 // Buyers
