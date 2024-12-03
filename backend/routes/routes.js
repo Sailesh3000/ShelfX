@@ -45,12 +45,12 @@ const router = express.Router();
 router.post("/signupSeller", signupSeller);
 router.post("/loginSeller", loginSeller);
 router.get("/details", getDetails);
-router.get("/sellers", getSellers);
+router.get("/sellers", getSellers); // admin
 router.post("/Edituserprofile",editUserProfile)
-router.get("/countSellers", getCountSellers);
+router.get("/countSellers", getCountSellers); // admin
 router.get("/sellerdetails/:id", getSellerDetailsById);
 router.put("/sellers/:id", updateSellerDetailsById);
-router.delete("/sellers/:id", deleteSellerById);
+router.delete("/sellers/:id", deleteSellerById); // admin
 router.delete("/deleteBook/:id",deleteBook);
 router.post("/logout", logout);
 
@@ -59,10 +59,10 @@ router.post("/signupBuyer", signupBuyer);
 router.post("/loginBuyer", loginBuyer);
 router.post("/Editbuyerprofile",editBuyerProfile)
 router.get("/explore", exploreBuyer);
-router.get("/buyers", getBuyers);
+router.get("/buyers", getBuyers); // admin
 router.put("/buyers/:id", updateBuyer);
-router.delete("/buyers/:id", deleteBuyer);
-router.get("/countBuyers", countBuyers);
+router.delete("/buyers/:id", deleteBuyer); // admin
+router.get("/countBuyers", countBuyers); // admin
 router.get("/status", getBookStatus);
 
 // Requests
@@ -78,7 +78,7 @@ router.post("/adminStatus", adminStatus);
 
 // Books 
 
-router.get('/books/count', booksCount);
+router.get('/books/count', booksCount);  // admin
 router.post('/uploadBook', upload.single('image'), uploadBook);
 
 export default router;

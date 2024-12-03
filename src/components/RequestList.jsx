@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { CircularProgress } from '@mui/material';
+import { useSelector, useDispatch } from 'react-redux';
+import {setBuyerDetails} from "../redux/slices/userSlice"
 
 const RequestList = ({ sellerId }) => {
+  const dispatch = useDispatch();
+  const buyerDetails = useSelector((state) => state.user.buy);
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -14,6 +18,14 @@ const RequestList = ({ sellerId }) => {
         });
         console.log(response.data);
         setRequests(response.data);
+
+        dispatch(setBuyerDetails({
+          email: response.data[0].email,
+          bookName: response.data[0].bookName,
+          pincode: response.data[0].pincode,
+          state: response.data[0].state,
+        }));
+
       } catch (error) {
         console.error('Error fetching requests:', error);
       } finally {
@@ -28,13 +40,14 @@ const RequestList = ({ sellerId }) => {
 
   const handleApproveRequest = async (bookId, sellerId, userId) => {
     try {
-      await axios.put(`http://localhost:5000/requests/${bookId}/approve`, { sellerId, userId });
-      setRequests((prevRequests) =>
-        prevRequests.map((req) =>
-          req.bookId === bookId && req.id === sellerId ? { ...req, status: 'approved' } : req
-        )
-      );
-    } catch (error) {
+      console.log(buyerDetails);
+      await axios.put(`http://localhost:5000/requests/${bookId}/approve`, { sellerId, userId, bookName: buyerDetails?.bookName , buyerEmail: buyerDetails?.email  });
+        setRequests((prevRequests) =>
+          prevRequests.map((req) =>
+            req.bookId === bookId && req.id === sellerId ? { ...req, status: 'approved' } : req
+          ))  
+        alert('Request approved and email sent!');
+    }catch (error) {
       console.error('Error approving request:', error);
     }
   };

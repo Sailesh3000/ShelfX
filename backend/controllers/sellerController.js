@@ -231,23 +231,35 @@ export const deleteBook = async(req, res) => {
     }
 
 
-export const subscribePlan = async (req, res) => {
-    const { selectedPlan } = req.params;
-    const userId = globalUserId;
-
-    if (!userId) {
-        return res.status(401).send("User not authenticated");
-    }
-
-    try {
-        const sql = "INSERT INTO subscriptions (userId, plan) VALUES (?, ?)";
-        await db.query(sql, [userId, selectedPlan]);
-        res.status(200).send("Subscription successful");
-    } catch (err) {
-        console.error("Error subscribing user:", err);
-        res.status(500).send("Server error");
-    }
-};
+    export const subscribePlan = async (req, res) => {
+        const { selectedPlan } = req.params;
+        const userId = globalUserId;
+    
+        if (!userId) {
+            return res.status(401).send("User not authenticated");
+        }
+    
+        try {
+            const [rows] = await db.query(
+                "SELECT * FROM subscriptions WHERE userId = ?",
+                [userId]
+            );
+    
+            if (rows.length > 0) {
+                const updateSql = "UPDATE subscriptions SET plan = ? WHERE userId = ?";
+                await db.query(updateSql, [selectedPlan, userId]);
+                res.status(200).send("Subscription updated successfully");
+            } else {
+                const insertSql = "INSERT INTO subscriptions (userId, plan) VALUES (?, ?)";
+                await db.query(insertSql, [userId, selectedPlan]);
+                res.status(200).send("Subscription successful");
+            }
+        } catch (err) {
+            console.error("Error subscribing user:", err);
+            res.status(500).send("Server error");
+        }
+    };
+    
 
 
 export const editUserProfile = async (req, res) => {

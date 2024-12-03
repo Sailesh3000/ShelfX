@@ -1,4 +1,4 @@
-import db from "../db.js"; // Adjust this import to match your db file structure
+import db from "../db.js"; 
 
 export const booksCount = async (req, res) => {
     try {

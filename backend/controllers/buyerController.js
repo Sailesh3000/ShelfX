@@ -188,13 +188,12 @@ export const editBuyerProfile = async (req, res) => {
   };
 
 export const getBookStatus = async (req, res) => {
-  const userId = globalUserId; // Ensure this globalUserId is set somewhere
+  const userId = globalUserId; 
   if (!userId) {
     return res.status(400).json({ message: "Buyer ID is required" });
   }
   
   try {
-    // First Query: Fetch requests for the user
     const requestSql = `
       SELECT bookId, requestDate, status 
       FROM request 
@@ -206,10 +205,8 @@ export const getBookStatus = async (req, res) => {
       return res.status(404).json({ message: "No requests found for this buyer" });
     }
 
-    // Extract the book IDs from the request results
     const bookIds = requestRows.map((row) => row.bookId);
 
-    // Second Query: Fetch book details for the bookIds
     const bookSql = `
       SELECT id as bookId, bookName, price 
       FROM books 
@@ -217,7 +214,6 @@ export const getBookStatus = async (req, res) => {
 
     const [bookRows] = await db.query(bookSql, [bookIds]);
 
-    // Create a map for quick lookup of book details
     const bookMap = {};
     bookRows.forEach((book) => {
       bookMap[book.bookId] = {
@@ -226,7 +222,6 @@ export const getBookStatus = async (req, res) => {
       };
     });
 
-    // Combine request and book details
     const requests = requestRows.map((row) => ({
       bookId: row.bookId,
       bookName: bookMap[row.bookId]?.bookName || "Unknown", // Check if book exists

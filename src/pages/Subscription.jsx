@@ -45,7 +45,7 @@ const Subscription = () => {
               <li>Basic support</li>
             </ul>
             <button
-              onClick={() => handlePlanSelection('Free Tier')}
+              onClick={() => handlePlanSelection('free')}
               className="text-[#222831] bg-[#FFD369] hover:bg-yellow-400 focus:ring-4 focus:ring-[#FFD369] font-medium rounded-lg text-sm px-5 py-2.5 text-center"
             >
               Get started
@@ -67,7 +67,7 @@ const Subscription = () => {
               <li>Basic support</li>
             </ul>
             <button
-              onClick={() => handlePlanSelection('Starter')}
+              onClick={() => handlePlanSelection('starter')}
               className="text-[#222831] bg-[#FFD369] hover:bg-yellow-400 focus:ring-4 focus:ring-[#FFD369] font-medium rounded-lg text-sm px-5 py-2.5 text-center"
             >
               Get started
@@ -89,7 +89,7 @@ const Subscription = () => {
               <li>Access to premium features</li>
             </ul>
             <button
-              onClick={() => handlePlanSelection('Premium')}
+              onClick={() => handlePlanSelection('premium')}
               className="text-[#222831] bg-[#FFD369] hover:bg-yellow-400 focus:ring-4 focus:ring-[#FFD369] font-medium rounded-lg text-sm px-5 py-2.5 text-center"
             >
               Get started

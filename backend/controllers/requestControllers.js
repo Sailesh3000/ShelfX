@@ -1,5 +1,5 @@
 import db from "../db.js"; // Adjust this import to match your db file structure
-
+import { sendApprovalEmail } from "./emailService.js";
 export const getRequestsBySellerId = async (req, res) => {
     const { sellerId } = req.params;
 
@@ -38,16 +38,19 @@ export const getRequestsBySellerId = async (req, res) => {
 
 export const approveRequest = async (req, res) => {
     const { bookId } = req.params;
-    const { sellerId, userId } = req.body;
+  const { sellerId, userId, bookName, buyerEmail } = req.body; 
 
-    try {
-        const sql = "UPDATE request SET status = ? WHERE bookId = ? AND sellerId = ? AND userId = ?";
-        await db.query(sql, ["APPROVED", bookId, sellerId, userId]);
-        res.json({ message: "Request approved successfully" });
-    } catch (error) {
-        console.error("Error approving request:", error);
-        res.status(500).json({ message: "Error approving request", error });
-    }
+  try {
+    const sql = "UPDATE request SET status = ? WHERE bookId = ? AND sellerId = ? AND userId = ?";
+    await db.query(sql, ["APPROVED", bookId, sellerId, userId]);
+
+    await sendApprovalEmail(buyerEmail,bookName);
+
+    res.json({ message: "Request approved successfully, email sent to buyer and seller!" });
+  } catch (error) {
+    console.error("Error approving request:", error);
+    res.status(500).json({ message: "Error approving request", error });
+  }
 };
 
 export const rejectRequest = async (req, res) => {

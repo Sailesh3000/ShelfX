@@ -15,6 +15,8 @@ import {
 import axios from "axios";
 import bcrypt from 'bcryptjs';
 
+
+
 const BookGrid = () => {
   const [activeTab, setActiveTab] = useState("myBooks");
   const [user, setUser] = useState(null);
@@ -139,6 +141,8 @@ const BookGrid = () => {
         }
       );
       setSeller(response.data.user);
+      console.log("Seller Details set in Redux:", response.data.user);
+
     } catch (error) {
       console.error("Error fetching seller details:", error);
       setSeller(null);
@@ -492,7 +496,7 @@ const BookGrid = () => {
           </Button>
         </DialogActions>
       </Dialog>
-{/* ///////////////////////////// Editbuyerprofile */}
+
 <Dialog open={opennameDialog} onClose={handleDialogClose} maxWidth="sm" fullWidth>
  <DialogTitle sx={{ backgroundColor: '#393E46', color: '#FFFFFF', fontWeight: 'bold' }}>
    Change Your Name
