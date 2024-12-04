@@ -5,26 +5,33 @@ import axios from "axios";
 const Card = ({ name, time, amount, date, status }) => {
   let statusColor;
   switch (status) {
-    case "ACCEPTED":
+    case "DECLINED":
+      statusColor = "bg-red-100 text-red-700";
+      break;
+    case "APPROVED":
       statusColor = "bg-green-100 text-green-700";
       break;
-    case "DECLINED":
-      statusColor = "bg-blue-100 text-blue-700";
-      break;
     default:
-      statusColor = "bg-white-100 text-pink-700";
+      statusColor = "bg-yellow-100 text-yellow-700";
   }
 
   return (
-    <div className="p-4 bg-white shadow-md rounded-lg">
-      <h3 className="text-lg font-semibold">{name}</h3>
-      <div className="flex items-center space-x-2 text-sm text-gray-600">
-        <span className="material-icons">schedule</span>
-        <span>{time}</span>
-        <span className="ml-auto">{amount}</span>
+    <div className="p-5 bg-black rounded-xl">
+      <h3 >{name}</h3>
+
+      <div className="flex items-center justify-between text-sm text-gray-600">
+        <div className="flex items-center space-x-1">
+          <span className="material-icons text-gray-400">schedule</span>
+          <span>{time}</span>
+        </div>
+        <span className="font-medium text-gray-700">{amount}</span>
       </div>
+
       <p className="text-sm text-gray-500">{date}</p>
-      <div className={`mt-2 inline-block px-3 py-1 rounded-full text-xs font-semibold ${statusColor}`}>
+
+      <div
+        className={`inline-block px-4 py-2 rounded-full text-xs font-semibold ${statusColor}`}
+      >
         {status}
       </div>
     </div>
@@ -65,7 +72,7 @@ const HistoryDashboard = () => {
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-6">History</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="gap-6 bg-black">
         {req.length > 0 ? (
           req.map((request) => (
             <Card

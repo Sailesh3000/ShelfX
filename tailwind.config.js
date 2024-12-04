@@ -3,7 +3,7 @@ module.exports = {
   darkMode: 'class', // Enabling dark mode
   content: [
     "./index.html",
-    "./src/**/*.{vue,js,ts,jsx,tsx}",
+    "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {
