@@ -1,4 +1,7 @@
 import nodemailer from 'nodemailer';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 export const sendApprovalEmail = async (buyerEmail, bookName) => {
   const transporter = nodemailer.createTransport({
@@ -7,13 +10,13 @@ export const sendApprovalEmail = async (buyerEmail, bookName) => {
     port:587,
     secure: false,
     auth: {
-      user: "chandrasailesh30@gmail.com",
-      pass: "gymk xcpy vpse zynt",
+      user: process.env.EMAIL_USR,
+      pass: process.env.APP_PASS,
     },
   });
 
   const mailOptions = {
-    from: "chandrasailesh30@gmail.com",
+    from: process.env.EMAIL_USR,
     to: [buyerEmail],
     subject: `Your request for ${bookName} has been approved!`,
     text: `Dear Buyer and Seller, your rental request for Book:- ${bookName} has been approved. Please proceed with the next steps.`,
