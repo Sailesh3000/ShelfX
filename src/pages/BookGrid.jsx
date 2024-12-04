@@ -16,7 +16,6 @@ import axios from "axios";
 import bcrypt from 'bcryptjs';
 
 
-
 const BookGrid = () => {
   const [activeTab, setActiveTab] = useState("myBooks");
   const [user, setUser] = useState(null);
@@ -77,26 +76,28 @@ const BookGrid = () => {
   const navigate = useNavigate();
   const Card = ({ name, time, amount, date, status }) => {
     let statusColor;
+    let bgColor;
     switch (status) {
-      case "ACCEPTED":
+      case "APPROVED":
         statusColor = "bg-green-100 text-green-700";
+        bgColor = "bg-green-100";
         break;
-      case "DECLINED":
-        statusColor = "bg-blue-100 text-blue-700";
+      case "REJECTED":
+        statusColor = "bg-red-100 text-red-700";
+        bgColor = "bg-red-100";
         break;
       default:
         statusColor = "bg-white-100 text-pink-700";
+        bgColor = "bg-white-100";
     }
   
     return (
-      <div className="p-4 bg-white shadow-md rounded-lg">
-        <h3 className="text-lg font-semibold">{name}</h3>
-        <div className="flex items-center space-x-2 text-sm text-gray-600">
-          <span className="material-icons">schedule</span>
-          <span>{time}</span>
-          <span className="ml-auto">{amount}</span>
+      <div className={`p-4 ${bgColor} shadow-md rounded-lg max-w-80`}>
+        <h3 className="text-lg font-semibold p-2">{name}</h3>
+        <div className="text-sm text-gray-600 p-2">
+          <span className="ml-auto">Price:- {amount}</span>
         </div>
-        <p className="text-sm text-gray-500">{date}</p>
+        <p className="text-sm text-gray-500 p-2">Date:- {date}</p>
         <div className={`mt-2 inline-block px-3 py-1 rounded-full text-xs font-semibold ${statusColor}`}>
           {status}
         </div>
@@ -465,7 +466,7 @@ const BookGrid = () => {
               </button>
             </div> </div>
             <br />
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-black">
                 {req.length > 0 ? (
                   req.map((request) => (
                     <Card

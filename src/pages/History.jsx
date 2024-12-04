@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 
 // Card Component for displaying request details
 const Card = ({ name, time, amount, date, status }) => {
@@ -16,7 +15,7 @@ const Card = ({ name, time, amount, date, status }) => {
   }
 
   return (
-    <div className="p-5 bg-black rounded-xl">
+    <div className="p-5 bg-black ">
       <h3 >{name}</h3>
 
       <div className="flex items-center justify-between text-sm text-gray-600">
@@ -38,57 +37,60 @@ const Card = ({ name, time, amount, date, status }) => {
   );
 };
 
-const HistoryDashboard = () => {
-  const [req, setRequests] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+export default Card;
 
-  useEffect(() => {
-    const fetchRequests = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(`http://localhost:5000/requests/status`, {
-          withCredentials: true,
-        });
-        setRequests(response.data.requests);
-      } catch (err) {
-        setError(err.response?.data?.message || err.message); // More detailed error handling
-      } finally {
-        setLoading(false);
-      }
-    };
 
-    fetchRequests();
-  }, []);
+// const HistoryDashboard = () => {
+//   const [req, setRequests] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState(null);
 
-  if (loading) {
-    return <div className="text-center">Loading...</div>; // Consider using a spinner here
-  }
+//   useEffect(() => {
+//     const fetchRequests = async () => {
+//       try {
+//         setLoading(true);
+//         const response = await axios.get(`http://localhost:5000/requests/status`, {
+//           withCredentials: true,
+//         });
+//         setRequests(response.data.requests);
+//       } catch (err) {
+//         setError(err.response?.data?.message || err.message); // More detailed error handling
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
 
-  if (error) {
-    return <div className="text-center text-red-500">{error}</div>;
-  }
+//     fetchRequests();
+//   }, []);
 
-  return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold mb-6">History</h1>
-      <div className="gap-6 bg-black">
-        {req.length > 0 ? (
-          req.map((request) => (
-            <Card
-              key={request.bookId} 
-              name={request.bookName}
-              amount={request.bookPrice}
-              date={new Date(request.date).toLocaleDateString()} // Format the date
-              status={request.status}
-            />
-          ))
-        ) : (
-          <p className="text-center text-gray-500">No requests found</p>
-        )}
-      </div>
-    </div>
-  );
-};
+//   if (loading) {
+//     return <div className="text-center">Loading...</div>; // Consider using a spinner here
+//   }
 
-export default HistoryDashboard;
+//   if (error) {
+//     return <div className="text-center text-red-500">{error}</div>;
+//   }
+
+//   return (
+//     <div className="p-8">
+//       <h1 className="text-2xl font-bold mb-6">History</h1>
+//       <div className="gap-6 bg-white">
+//         {req.length > 0 ? (
+//           req.map((request) => (
+//             <Card
+//               key={request.bookId} 
+//               name={request.bookName}
+//               amount={request.bookPrice}
+//               date={new Date(request.date).toLocaleDateString()} // Format the date
+//               status={request.status}
+//             />
+//           ))
+//         ) : (
+//           <p className="text-center text-gray-500">No requests found</p>
+//         )}
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default HistoryDashboard;
