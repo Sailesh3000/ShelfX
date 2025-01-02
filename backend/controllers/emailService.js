@@ -10,13 +10,13 @@ export const sendApprovalEmail = async (buyerEmail, bookName) => {
     port:587,
     secure: false,
     auth: {
-      user: process.env.EMAIL_USR,
-      pass: process.env.APP_PASS,
+      user: "chandrasailesh30@gmail.com",
+      pass: "gymk xcpy vpse zynt",
     },
   });
 
   const mailOptions = {
-    from: process.env.EMAIL_USR,
+    from: "chandrasailesh30@gmail.com",
     to: [buyerEmail],
     subject: `Your request for ${bookName} has been approved!`,
     text: `Dear Buyer and Seller, your rental request for Book:- ${bookName} has been approved. Please proceed with the next steps.`,

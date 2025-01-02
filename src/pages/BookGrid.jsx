@@ -86,9 +86,9 @@ const BookGrid = () => {
         statusColor = "bg-red-100 text-red-700";
         bgColor = "bg-red-100";
         break;
-      default:
-        statusColor = "bg-white-100 text-pink-700";
-        bgColor = "bg-white-100";
+        case "PENDING":
+        statusColor = "bg-yellow-100 text-pink-700";
+        bgColor = "bg-yellow-100";
     }
   
     return (
@@ -466,7 +466,7 @@ const BookGrid = () => {
               </button>
             </div> </div>
             <br />
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-black">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 text-black">
                 {req.length > 0 ? (
                   req.map((request) => (
                     <Card

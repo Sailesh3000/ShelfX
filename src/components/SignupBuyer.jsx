@@ -13,38 +13,57 @@ const SignupBuyer = ({ onToggle }) => {
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
 
+   // Validation Functions
+   const validateEmail = (email) => {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailRegex.test(email) ? '' : 'Invalid email format';
+  };
+
+  const validateUsername = (username) => {
+    const nameRegex = /^[A-Za-z]+$/;
+    return username.trim().length >= 3 && nameRegex.test(username)
+      ? ''
+      : 'Username must contain only alphabets and be at least 3 characters long';
+  };
+
+  const validatePassword = (password) => {
+    const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%?&])[A-Za-z\d@$!%?&]{8,}$/;
+    return passwordRegex.test(password)
+      ? ''
+      : 'Password must have at least 8 characters, include an uppercase letter, lowercase letter, number, and special character.';
+  };
+
+  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
       [name]: value,
     });
+
+    // Dynamic validation
+    let error = '';
+    if (name === 'email') {
+      error = validateEmail(value);
+    } else if (name === 'username') {
+      error = validateUsername(value);
+    } else if (name === 'password') {
+      error = validatePassword(value);
+    } else if (name === 'confirmPassword') {
+      error = value === formData.password ? '' : 'Passwords do not match';
+    }
+
+    setErrors((prev) => ({
+      ...prev,
+      [name]: error,
+    }));
   };
 
-  const validateEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.(com|in)$/;
-    return emailRegex.test(email);
-  };
-
-  const validatePassword = (password) => {
-    const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-    return passwordRegex.test(password);
-  };
-
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const validationErrors = {};
 
-    // Email validation
-    if (!validateEmail(formData.email)) {
-      validationErrors.email = 'Invalid email format. Email must contain @ and end with .com or .in';
-    }
-
-    // Password validation
-    if (!validatePassword(formData.password)) {
-      validationErrors.password =
-        'Password must be at least 8 characters long, include one uppercase letter, one lowercase letter, one number, and one special character.';
-    }
+    let validationErrors = {};
 
     // Confirm Password validation
     if (formData.password !== formData.confirmPassword) {
@@ -56,26 +75,18 @@ const SignupBuyer = ({ onToggle }) => {
       return;
     }
 
-    // Clear errors if no validation errors
-    setErrors({});
+    setErrors({}); // Clear previous errors
 
     try {
       const response = await fetch('http://localhost:5000/SignupBuyer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: formData.username,
-          email: formData.email,
-          password: formData.password,
-          pincode: formData.pincode,
-          state: formData.state,
-        }),
+        body: JSON.stringify(formData),
       });
 
       const data = await response.text();
       if (data === 'Registration successful') {
         alert('Account created successfully!');
-        navigate('/BookGrid');
       } else {
         alert('Registration failed');
       }
@@ -107,6 +118,7 @@ const SignupBuyer = ({ onToggle }) => {
                 placeholder="Enter your username"
                 required
               />
+              {errors.username && <p className="text-red-500 text-sm">{errors.username}</p>}
             </div>
             <div>
               <label htmlFor="email" className="block mb-2 text-sm font-medium text-[#FFD369]">
@@ -154,9 +166,10 @@ const SignupBuyer = ({ onToggle }) => {
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FFD369] focus:border-[#FFD369] block w-full p-2.5"
                 required
               />
-              {errors.confirmPassword && <p className="text-red-500 text-sm">{errors.confirmPassword}</p>}
+              {errors.confirmPassword && (
+                <p className="text-red-500 text-sm">{errors.confirmPassword}</p>
+              )}
             </div>
-            {/* Pincode and State inputs */}
             <div className="flex items-start">
               <div>
                 <label htmlFor="pincode" className="block mb-2 text-sm font-medium text-[#FFD369]">
@@ -186,10 +199,36 @@ const SignupBuyer = ({ onToggle }) => {
                   required
                 >
                   <option value="">--Please choose a state--</option>
-                  {['Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat',
-                   'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra',
-                    'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu',
-                    'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal'].map((state) => (
+                  {[
+                    'Andhra Pradesh',
+                    'Arunachal Pradesh',
+                    'Assam',
+                    'Bihar',
+                    'Chhattisgarh',
+                    'Goa',
+                    'Gujarat',
+                    'Haryana',
+                    'Himachal Pradesh',
+                    'Jharkhand',
+                    'Karnataka',
+                    'Kerala',
+                    'Madhya Pradesh',
+                    'Maharashtra',
+                    'Manipur',
+                    'Meghalaya',
+                    'Mizoram',
+                    'Nagaland',
+                    'Odisha',
+                    'Punjab',
+                    'Rajasthan',
+                    'Sikkim',
+                    'Tamil Nadu',
+                    'Telangana',
+                    'Tripura',
+                    'Uttar Pradesh',
+                    'Uttarakhand',
+                    'West Bengal',
+                  ].map((state) => (
                     <option key={state} value={state}>
                       {state}
                     </option>
@@ -208,19 +247,32 @@ const SignupBuyer = ({ onToggle }) => {
                 />
               </div>
               <div className="ml-3 text-sm">
-                <label htmlFor="terms" className="font-light text-white">
-                  I accept the <a className="font-medium text-[#FFD369] hover:underline" href="#">Terms and Conditions</a>
+                <label htmlFor="terms" className="font-light text-gray-300">
+                  I accept the{' '}
+                  <a className="font-medium text-[#FFD369] hover:underline" href="/">
+                    Terms and Conditions
+                  </a>
                 </label>
               </div>
             </div>
             <button
               type="submit"
-              className="w-full text-black bg-[#FFD369] hover:bg-[#FFD369] focus:ring-4 focus:outline-none font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+              className="w-full text-white bg-[#FFD369] hover:bg-[#ffd15c] focus:ring-4 focus:outline-none focus:ring-[#FFD369] font-medium rounded-lg text-sm px-5 py-2.5 text-center"
             >
               Create an account
             </button>
-            <p className="text-sm font-light text-white">
-              Already have an account? <a className="font-medium text-[#FFD369] hover:underline" onClick={onToggle}>Login here</a>
+            <p className="text-sm font-light text-gray-400">
+              Already have an account?{' '}
+              <a
+                href="/"
+                onClick={(e) => {
+                  e.preventDefault();
+                  onToggle();
+                }}
+                className="font-medium text-[#FFD369] hover:underline"
+              >
+                Login here
+              </a>
             </p>
           </form>
         </div>

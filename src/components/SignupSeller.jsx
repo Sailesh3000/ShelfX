@@ -8,64 +8,75 @@ const SignupSeller = ({ onToggle }) => {
     confirmPassword: '',
   });
 
-  const [errors, setErrors] = useState({
-    email: '',
-    password: '',
-    confirmPassword: '',
-  });
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
-  // Email validation regex
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  // Validation Functions
+  const validateEmail = (email) => {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailRegex.test(email) ? '' : 'Invalid email format';
+  };
 
-  // Password validation (at least 8 characters, one letter, one number, and one special character)
-  const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
+  const validateUsername = (username) => {
+    const nameRegex = /^[A-Za-z]+$/;
+    return username.trim().length >= 3 && nameRegex.test(username)
+      ? ''
+      : 'Username must contain only alphabets and be at least 3 characters long';
+  };
 
+  const validatePassword = (password) => {
+    const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%?&])[A-Za-z\d@$!%?&]{8,}$/;
+    return passwordRegex.test(password)
+      ? ''
+      : 'Password must have at least 8 characters, include an uppercase letter, lowercase letter, number, and special character.';
+  };
+
+  const validateConfirmPassword = (password, confirmPassword) =>
+    password === confirmPassword ? '' : 'Passwords do not match';
+
+  // Input Change Handler
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
+
+    setFormData((prev) => ({
+      ...prev,
       [name]: value,
-    });
+    }));
+
+    // Validate the input field
+    let error = '';
+    if (name === 'email') error = validateEmail(value);
+    if (name === 'username') error = validateUsername(value);
+    if (name === 'password') error = validatePassword(value);
+    if (name === 'confirmPassword') error = validateConfirmPassword(formData.password, value);
+
+    setErrors((prev) => ({
+      ...prev,
+      [name]: error,
+    }));
   };
 
-  const validateForm = () => {
-    let isValid = true;
-    const newErrors = {
-      email: '',
-      password: '',
-      confirmPassword: '',
-    };
-
-    // Validate email
-    if (!emailRegex.test(formData.email)) {
-      newErrors.email = 'Invalid email format.';
-      isValid = false;
-    }
-
-    // Validate password
-    if (!passwordRegex.test(formData.password)) {
-      newErrors.password = 'Password must be at least 8 characters long, include a number and a special character.';
-      isValid = false;
-    }
-
-    // Check if passwords match
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match!';
-      isValid = false;
-    }
-
-    setErrors(newErrors);
-    return isValid;
-  };
-
+  // Form Submission Handler
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!validateForm()) {
+    // Final validation check
+    const formErrors = {
+      username: validateUsername(formData.username),
+      email: validateEmail(formData.email),
+      password: validatePassword(formData.password),
+      confirmPassword: validateConfirmPassword(formData.password, formData.confirmPassword),
+    };
+
+    setErrors(formErrors);
+
+    if (Object.values(formErrors).some((error) => error !== '')) {
+      alert('Please fix the errors before submitting.');
       return;
     }
 
     try {
+      setLoading(true);
       const response = await fetch('http://localhost:5000/SignupSeller', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -77,14 +88,24 @@ const SignupSeller = ({ onToggle }) => {
       });
 
       const data = await response.text();
-      if (data === 'Registration successful') {
+
+      if (response.ok && data === 'Registration successful') {
         alert('Account created successfully!');
+        setFormData({
+          username: '',
+          email: '',
+          password: '',
+          confirmPassword: '',
+        });
+        setErrors({});
       } else {
-        alert('Registration failed');
+        alert(data || 'Registration failed.');
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('An error occurred. Please try again.');
+      alert('An error occurred while processing your request. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -93,11 +114,14 @@ const SignupSeller = ({ onToggle }) => {
       <div className="w-full bg-[#393E46] rounded-lg shadow md:mt-0 sm:max-w-md xl:p-0">
         <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
           <h1 className="text-2xl text-[#FFD369] tracking-tight font-extrabold mb-4">
-            Create a Seller account
+            Create a Seller Account
           </h1>
           <form className="space-y-4 md:space-y-6" onSubmit={handleSubmit}>
+            {/* Username */}
             <div>
-              <label htmlFor="username" className="block mb-2 text-sm font-medium text-[#FFD369]">Username</label>
+              <label htmlFor="username" className="block mb-2 text-sm font-medium text-[#FFD369]">
+                Username
+              </label>
               <input
                 type="text"
                 id="username"
@@ -108,72 +132,100 @@ const SignupSeller = ({ onToggle }) => {
                 placeholder="Enter your username"
                 required
               />
+              {errors.username && <p className="text-red-500 text-xs mt-1">{errors.username}</p>}
             </div>
+
+            {/* Email */}
             <div>
-              <label htmlFor="email" className="block mb-2 text-sm font-medium text-[#FFD369]">Your email</label>
-              <input 
-                type="email" 
-                name="email" 
-                id="email" 
+              <label htmlFor="email" className="block mb-2 text-sm font-medium text-[#FFD369]">
+                Your Email
+              </label>
+              <input
+                type="email"
+                name="email"
+                id="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FFD369] focus:border-[#FFD369] block w-full p-2.5" 
-                placeholder="name@company.com" 
-                required 
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FFD369] focus:border-[#FFD369] block w-full p-2.5"
+                placeholder="name@company.com"
+                required
               />
-              {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+              {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
             </div>
+
+            {/* Password */}
             <div>
-              <label htmlFor="password" className="block mb-2 text-sm font-medium text-[#FFD369]">Password</label>
-              <input 
-                type="password" 
-                name="password" 
-                id="password" 
+              <label htmlFor="password" className="block mb-2 text-sm font-medium text-[#FFD369]">
+                Password
+              </label>
+              <input
+                type="password"
+                name="password"
+                id="password"
                 value={formData.password}
                 onChange={handleChange}
-                placeholder="••••••••" 
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FFD369] focus:border-[#FFD369] block w-full p-2.5" 
-                required 
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FFD369] focus:border-[#FFD369] block w-full p-2.5"
+                placeholder="••••••••"
+                required
               />
-              {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+              {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
             </div>
+
+            {/* Confirm Password */}
             <div>
-              <label htmlFor="confirm-password" className="block mb-2 text-sm font-medium text-[#FFD369]">Confirm password</label>
-              <input 
-                type="password" 
-                name="confirmPassword" 
-                id="confirm-password" 
+              <label htmlFor="confirm-password" className="block mb-2 text-sm font-medium text-[#FFD369]">
+                Confirm Password
+              </label>
+              <input
+                type="password"
+                name="confirmPassword"
+                id="confirm-password"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                placeholder="••••••••" 
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FFD369] focus:border-[#FFD369] block w-full p-2.5" 
-                required 
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FFD369] focus:border-[#FFD369] block w-full p-2.5"
+                placeholder="••••••••"
+                required
               />
-              {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>}
+              {errors.confirmPassword && (
+                <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>
+              )}
             </div>
+
+            {/* Terms and Conditions */}
             <div className="flex items-start">
               <div className="flex items-center h-5">
-                <input 
-                  id="terms" 
-                  aria-describedby="terms" 
-                  type="checkbox" 
-                  className="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-[#FFD369]" 
-                  required 
+                <input
+                  id="terms"
+                  aria-describedby="terms"
+                  type="checkbox"
+                  className="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-[#FFD369]"
+                  required
                 />
               </div>
               <div className="ml-3 text-sm">
                 <label htmlFor="terms" className="font-light text-white">
-                  I accept the <a className="font-medium text-[#FFD369] hover:underline" href="#">Terms and Conditions</a>
+                  I accept the{' '}
+                  <a className="font-medium text-[#FFD369] hover:underline" href="#">
+                    Terms and Conditions
+                  </a>
                 </label>
               </div>
             </div>
-            <button 
-              type="submit" 
-              className="w-full text-gray-900 bg-[#FFD369] hover:bg-yellow-500 focus:ring-4 focus:outline-none focus:ring-[#FFD369] font-medium rounded-lg text-sm px-5 py-2.5 text-center">
-              Create an account
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              className="w-full text-gray-900 bg-[#FFD369] hover:bg-yellow-500 focus:ring-4 focus:outline-none focus:ring-[#FFD369] font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+              disabled={loading}
+            >
+              {loading ? 'Creating Account...' : 'Create an Account'}
             </button>
+
             <p className="text-sm font-light text-white">
-              Already have an account? <a href="#" onClick={onToggle} className="font-medium text-[#FFD369] hover:underline">Login here</a>
+              Already have an account?{' '}
+              <a href="#" onClick={onToggle} className="font-medium text-[#FFD369] hover:underline">
+                Login here
+              </a>
             </p>
           </form>
         </div>

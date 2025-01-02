@@ -1,39 +1,57 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate } from 'react-router-dom'; 
 
 const LoginSeller = ({ onToggle }) => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
+  const [errors, setErrors] = useState({});
+  const navigate = useNavigate(); 
 
-  const navigate = useNavigate(); // Initialize useNavigate
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email) ? '' : 'Invalid email format';
+  };
 
   const handleChange = (e) => {
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: value,
     });
+
+    if (name === 'email') {
+      setErrors((prev) => ({
+        ...prev,
+        email: validateEmail(value),
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const emailError = validateEmail(formData.email);
+    if (emailError) {
+      setErrors({ email: emailError });
+      return;
+    }
+
     try {
       const response = await fetch('http://localhost:5000/LoginSeller', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           email: formData.email,
-          password: formData.password
-        })
+          password: formData.password,
+        }),
       });
 
       if (response.ok) {
-      
-        navigate('/seller-xyz'); // Redirect to Seller Profile page
+        navigate('/seller-xyz'); 
       } else {
         alert('Invalid username or password');
       }
@@ -52,20 +70,27 @@ const LoginSeller = ({ onToggle }) => {
           </h1>
           <form className="space-y-4 md:space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="email" className="block mb-2 text-sm font-medium text-white">Your email</label>
+              <label htmlFor="email" className="block mb-2 text-sm font-medium text-white">
+                Your email
+              </label>
               <input
                 type="email"
                 name="email"
                 id="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#FFD369] focus:border-[#FFD369] block w-full p-2.5"
+                className={`bg-gray-50 border text-gray-900 text-sm rounded-lg focus:ring-[#FFD369] focus:border-[#FFD369] block w-full p-2.5 ${
+                  errors.email ? 'border-red-500' : 'border-gray-300'
+                }`}
                 placeholder="name@company.com"
                 required
               />
+              {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
             </div>
             <div>
-              <label htmlFor="password" className="block mb-2 text-sm font-medium text-white">Password</label>
+              <label htmlFor="password" className="block mb-2 text-sm font-medium text-white">
+                Password
+              </label>
               <input
                 type="password"
                 name="password"
@@ -84,7 +109,10 @@ const LoginSeller = ({ onToggle }) => {
               Login
             </button>
             <p className="text-sm font-light text-white">
-              Don't have an account? <a href="#" onClick={onToggle} className="font-medium text-[#FFD369] hover:underline">Sign up here</a>
+              Don't have an account?{' '}
+              <a href="#" onClick={onToggle} className="font-medium text-[#FFD369] hover:underline">
+                Sign up here
+              </a>
             </p>
           </form>
         </div>

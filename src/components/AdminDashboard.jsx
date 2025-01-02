@@ -24,10 +24,6 @@ import {
 import axios from "axios";
 
 const AdminDashboard = () => {
-  const [users, setUsers] = useState([
-    { id: 1, name: "John Doe", email: "john@example.com", role: "Admin" },
-    { id: 2, name: "Jane Smith", email: "jane@example.com", role: "User" },
-  ]);
   const [sellers, setSellers] = useState([]);
   const [buyers, setBuyers] = useState([]); // New state for buyers
   const [subs, setSubs] = useState([]);
@@ -134,7 +130,7 @@ const AdminDashboard = () => {
 
   const handleDeleteClickSeller = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/seller/${id}`);
+      await axios.delete(`http://localhost:5000/sellers/${id}`);
       setSellers(sellers.filter((seller) => seller.id !== id));
     } catch (err) {
       console.error("Error deleting seller:", err);
@@ -143,7 +139,7 @@ const AdminDashboard = () => {
 
   const handleDeleteClickBuyer = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/buyer/${id}`);
+      await axios.delete(`http://localhost:5000/buyers/${id}`);
       setBuyers(buyers.filter((buyer) => buyer.id !== id));
     } catch (err) {
       console.error("Error deleting seller:", err);
@@ -153,7 +149,7 @@ const AdminDashboard = () => {
   const handleSaveSeller = async () => {
     try {
       await axios.put(
-        `http://localhost:5000/seller/${editSeller.id}`,
+        `http://localhost:5000/sellers/${editSeller.id}`,
         editSeller
       );
       setSellers(
@@ -171,7 +167,7 @@ const AdminDashboard = () => {
   const handleSaveBuyer = async () => {
     try {
       await axios.put(
-        `http://localhost:5000/buyer/${editBuyer.id}`,
+        `http://localhost:5000/buyers/${editBuyer.id}`,
         editBuyer
       );
       setBuyers(

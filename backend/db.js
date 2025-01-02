@@ -1,3 +1,5 @@
+import dotenv from "dotenv";
+dotenv.config();
 import express from "express";
 import path from "path";
 import mysql from "mysql2/promise";
@@ -11,7 +13,6 @@ const app = express();
 const port = 5000;
 
 let globalUserId = null;
-
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
@@ -47,14 +48,15 @@ app.use((req, res, next) => {
 app.use(router);
 
 const db = mysql.createPool({
-  host: "localhost",
-  user: "root",
-  password: "",
-  database: "ShelfX",
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  database: process.env.DB_NAME,
+  port: process.env.DB_PORT || 3306,
 });
 
 export default db;
 
 app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+  console.log(`Server is running on port ${port}`);
 });
