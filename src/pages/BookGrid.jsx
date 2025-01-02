@@ -62,7 +62,7 @@ const BookGrid = () => {
   };
     const fetchStatusRequests = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/status");
+        const response = await axios.get("https://shelf-x-backend.vercel.app/status");
         console.log(response);
         setRequests(response.data.requests);
       } catch (err) {
@@ -108,7 +108,7 @@ const BookGrid = () => {
 
   const fetchUserDetails = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/explore", {
+      const response = await axios.get("https://shelf-x-backend.vercel.app/explore", {
         withCredentials: true,
       });
       setUser(response.data.user);
@@ -136,7 +136,7 @@ const BookGrid = () => {
   const getUserDetails = async (userId) => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/sellerdetails/${userId}`,
+        `https://shelf-x-backend.vercel.app/sellerdetails/${userId}`,
         {
           withCredentials: true,
         }
@@ -171,7 +171,7 @@ const BookGrid = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/Editbuyerprofile', {
+      const response = await fetch('https://shelf-x-backend.vercel.app/Editbuyerprofile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -203,7 +203,7 @@ const BookGrid = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/Editbuyerprofile', {
+      const response = await fetch('https://shelf-x-backend.vercel.app/Editbuyerprofile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -231,7 +231,7 @@ const BookGrid = () => {
   const handleLogout = async () => {
     try {
       const response = await axios.post(
-        "http://localhost:5000/logout",
+        "https://shelf-x-backend.vercel.app/logout",
         {},
         {
           withCredentials: true,
@@ -295,7 +295,7 @@ const BookGrid = () => {
         sellerId : seller.userId
       };
 
-      const response = await axios.post("http://localhost:5000/request", requestData, {
+      const response = await axios.post("https://shelf-x-backend.vercel.app/request", requestData, {
         withCredentials: true,
       });
 

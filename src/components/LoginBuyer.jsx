@@ -39,7 +39,7 @@ const LoginBuyer = ({ onToggle }) => {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/LoginBuyer', {
+      const response = await fetch('https://shelf-x-backend.vercel.app/LoginBuyer', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
