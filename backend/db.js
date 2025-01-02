@@ -18,7 +18,7 @@ const upload = multer({ storage });
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: "https://shelf-x-saileshs-projects-2db51030.vercel.app",
     credentials: true,
   })
 );
