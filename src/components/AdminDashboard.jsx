@@ -39,7 +39,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchSellers = async () => {
       try {
-        const response = await axios.get("https://shelf-x-backend.vercel.app/sellers");
+        const response = await axios.get("https://shelf-x-mj39.vercel.app/sellers");
         setSellers(response.data);
       } catch (err) {
         console.error("Error fetching sellers:", err);
@@ -48,7 +48,7 @@ const AdminDashboard = () => {
 
     const fetchBuyers = async () => {
       try {
-        const response = await axios.get("https://shelf-x-backend.vercel.app/buyers");
+        const response = await axios.get("https://shelf-x-mj39.vercel.app/buyers");
         setBuyers(response.data);
       } catch (err) {
         console.error("Error fetching buyers:", err);
@@ -57,7 +57,7 @@ const AdminDashboard = () => {
 
     const fetchBooksCount = async () => {
       try {
-        const response = await axios.get("https://shelf-x-backend.vercel.app/books/count");
+        const response = await axios.get("https://shelf-x-mj39.vercel.app/books/count");
         setBooksUploaded(response.data.count);
       } catch (err) {
         console.error("Error fetching books count:", err);
@@ -66,7 +66,7 @@ const AdminDashboard = () => {
 
     const getCountSellers = async () => {
       try {
-        const response = await axios.get("https://shelf-x-backend.vercel.app/countSellers");
+        const response = await axios.get("https://shelf-x-mj39.vercel.app/countSellers");
         setSellCount(response.data.count);
       } catch (err) {
         console.error("Error fetching books count:", err);
@@ -75,7 +75,7 @@ const AdminDashboard = () => {
 
     const getCountBuyers = async () => {
       try {
-        const response = await axios.get("https://shelf-x-backend.vercel.app/countBuyers");
+        const response = await axios.get("https://shelf-x-mj39.vercel.app/countBuyers");
         setBuyCount(response.data.count);
       } catch (err) {
         console.error("Error fetching books count:", err);
@@ -85,7 +85,7 @@ const AdminDashboard = () => {
 
     const fetchSubscriptions = async () => {
       try {
-        const response = await axios.get("https://shelf-x-backend.vercel.app/subscriptions");
+        const response = await axios.get("https://shelf-x-mj39.vercel.app/subscriptions");
         setSubs(response.data);
       } catch (err) {
         console.error("Error fetching books count:", err);
@@ -130,7 +130,7 @@ const AdminDashboard = () => {
 
   const handleDeleteClickSeller = async (id) => {
     try {
-      await axios.delete(`https://shelf-x-backend.vercel.app/sellers/${id}`);
+      await axios.delete(`https://shelf-x-mj39.vercel.app/sellers/${id}`);
       setSellers(sellers.filter((seller) => seller.id !== id));
     } catch (err) {
       console.error("Error deleting seller:", err);
@@ -139,7 +139,7 @@ const AdminDashboard = () => {
 
   const handleDeleteClickBuyer = async (id) => {
     try {
-      await axios.delete(`https://shelf-x-backend.vercel.app/buyers/${id}`);
+      await axios.delete(`https://shelf-x-mj39.vercel.app/buyers/${id}`);
       setBuyers(buyers.filter((buyer) => buyer.id !== id));
     } catch (err) {
       console.error("Error deleting seller:", err);
@@ -149,7 +149,7 @@ const AdminDashboard = () => {
   const handleSaveSeller = async () => {
     try {
       await axios.put(
-        `https://shelf-x-backend.vercel.app/sellers/${editSeller.id}`,
+        `https://shelf-x-mj39.vercel.app/sellers/${editSeller.id}`,
         editSeller
       );
       setSellers(
@@ -167,7 +167,7 @@ const AdminDashboard = () => {
   const handleSaveBuyer = async () => {
     try {
       await axios.put(
-        `https://shelf-x-backend.vercel.app/buyers/${editBuyer.id}`,
+        `https://shelf-x-mj39.vercel.app/buyers/${editBuyer.id}`,
         editBuyer
       );
       setBuyers(

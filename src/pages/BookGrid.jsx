@@ -62,7 +62,7 @@ const BookGrid = () => {
   };
     const fetchStatusRequests = async () => {
       try {
-        const response = await axios.get("https://shelf-x-backend.vercel.app/status");
+        const response = await axios.get("https://shelf-x-mj39.vercel.app/status");
         console.log(response);
         setRequests(response.data.requests);
       } catch (err) {
@@ -108,7 +108,7 @@ const BookGrid = () => {
 
   const fetchUserDetails = async () => {
     try {
-      const response = await axios.get("https://shelf-x-backend.vercel.app/explore", {
+      const response = await axios.get("https://shelf-x-mj39.vercel.app/explore", {
         withCredentials: true,
       });
       setUser(response.data.user);
@@ -136,7 +136,7 @@ const BookGrid = () => {
   const getUserDetails = async (userId) => {
     try {
       const response = await axios.get(
-        `https://shelf-x-backend.vercel.app/sellerdetails/${userId}`,
+        `https://shelf-x-mj39.vercel.app/sellerdetails/${userId}`,
         {
           withCredentials: true,
         }
@@ -171,7 +171,7 @@ const BookGrid = () => {
     }
 
     try {
-      const response = await fetch('https://shelf-x-backend.vercel.app/Editbuyerprofile', {
+      const response = await fetch('https://shelf-x-mj39.vercel.app/Editbuyerprofile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -203,7 +203,7 @@ const BookGrid = () => {
     }
 
     try {
-      const response = await fetch('https://shelf-x-backend.vercel.app/Editbuyerprofile', {
+      const response = await fetch('https://shelf-x-mj39.vercel.app/Editbuyerprofile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -231,7 +231,7 @@ const BookGrid = () => {
   const handleLogout = async () => {
     try {
       const response = await axios.post(
-        "https://shelf-x-backend.vercel.app/logout",
+        "https://shelf-x-mj39.vercel.app/logout",
         {},
         {
           withCredentials: true,
@@ -295,7 +295,7 @@ const BookGrid = () => {
         sellerId : seller.userId
       };
 
-      const response = await axios.post("https://shelf-x-backend.vercel.app/request", requestData, {
+      const response = await axios.post("https://shelf-x-mj39.vercel.app/request", requestData, {
         withCredentials: true,
       });
 

@@ -12,7 +12,7 @@ const Subscription = () => {
       return;
     }
     try {
-      await axios.post(`https://shelf-x-backend.vercel.app/subscribe/${selectedPlan}`);
+      await axios.post(`https://shelf-x-mj39.vercel.app/subscribe/${selectedPlan}`);
       alert('Subscription successful!');
     } catch (error) {
       console.error("Error subscribing:", error);

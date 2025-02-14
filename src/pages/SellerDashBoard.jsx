@@ -104,7 +104,7 @@ const SellerProfile = () => {
     }
 
     try {
-      const response = await axios.post('https://shelf-x-backend.vercel.app/uploadBook', data, {
+      const response = await axios.post('https://shelf-x-mj39.vercel.app/uploadBook', data, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -132,7 +132,7 @@ const SellerProfile = () => {
 
   const fetchUserDetails = async () => {
     try {
-      const response = await axios.get('https://shelf-x-backend.vercel.app/details', {
+      const response = await axios.get('https://shelf-x-mj39.vercel.app/details', {
         withCredentials: true,
       });
       setUser(response.data.user); // Assuming user now has username
@@ -159,7 +159,7 @@ const SellerProfile = () => {
 
   const handleDelete = async (bookId) => {
     try {
-      const response = await axios.delete(`https://shelf-x-backend.vercel.app/deleteBook/${bookId}`, {
+      const response = await axios.delete(`https://shelf-x-mj39.vercel.app/deleteBook/${bookId}`, {
         withCredentials: true,
       });
 
@@ -198,7 +198,7 @@ const SellerProfile = () => {
     }
   
     try {
-      const response = await fetch('https://shelf-x-backend.vercel.app/Edituserprofile', {
+      const response = await fetch('https://shelf-x-mj39.vercel.app/Edituserprofile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -238,7 +238,7 @@ const SellerProfile = () => {
     }
   
     try {
-      const response = await fetch('https://shelf-x-backend.vercel.app/Edituserprofile', {
+      const response = await fetch('https://shelf-x-mj39.vercel.app/Edituserprofile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -260,7 +260,7 @@ const SellerProfile = () => {
   
   const handleLogout = async () => {
     try {
-      const response = await axios.post('https://shelf-x-backend.vercel.app/logout', {}, {
+      const response = await axios.post('https://shelf-x-mj39.vercel.app/logout', {}, {
         withCredentials: true,
       });
       if (response.status === 200) {

@@ -14,7 +14,7 @@ const AdminLogin = () => {
 
     const handleLogin = async () => {
         try {
-            const response = await axios.post('https://shelf-x-backend.vercel.app/adminStatus', formData);
+            const response = await axios.post('https://shelf-x-mj39.vercel.app/adminStatus', formData);
             
             if (response.status === 200) {
                 

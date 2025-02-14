@@ -78,7 +78,7 @@ const SignupBuyer = ({ onToggle }) => {
     setErrors({}); // Clear previous errors
 
     try {
-      const response = await fetch('https://shelf-x-backend.vercel.app/SignupBuyer', {
+      const response = await fetch('https://shelf-x-mj39.vercel.app/SignupBuyer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),

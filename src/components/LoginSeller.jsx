@@ -39,7 +39,7 @@ const LoginSeller = ({ onToggle }) => {
     }
 
     try {
-      const response = await fetch('https://shelf-x-backend.vercel.app/LoginSeller', {
+      const response = await fetch('https://shelf-x-mj39.vercel.app/LoginSeller', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
