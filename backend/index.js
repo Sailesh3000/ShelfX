@@ -8,13 +8,11 @@ import bodyParser from "body-parser";
 import session from "express-session";
 import multer from "multer";
 import router from "./routes/routes.js";
-// Add this import
 import MySQLStore from "express-mysql-session";
 
 const app = express();
-const port = 5000;
+const port = process.env.PORT || 5000;
 
-// Initialize MySQL Store
 const MySQLStoreSession = MySQLStore(session);
 const sessionStore = new MySQLStoreSession({
     host: process.env.DB_HOST,
@@ -44,11 +42,11 @@ app.use(
         secret: "asdg34NJSQKK78",
         resave: false,
         saveUninitialized: false,
-        store: sessionStore,  // Use the MySQL store
+        store: sessionStore,
         cookie: {
             expires: 24 * 60 * 60 * 1000,
             sameSite: "None",
-            secure: false,
+            secure: process.env.NODE_ENV === 'production',
         },
     })
 );
@@ -59,9 +57,7 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use(router);
-
-const db = mysql.createPool({
+export const db = mysql.createPool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASS,
@@ -69,8 +65,13 @@ const db = mysql.createPool({
     port: process.env.DB_PORT || 3306,
 });
 
-export default db;
+app.use(router);
 
-app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
-});
+// For local development
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(port, () => {
+        console.log(`Server is running on port ${port}`);
+    });
+}
+
+export default app;

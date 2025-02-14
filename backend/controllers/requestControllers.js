@@ -1,4 +1,4 @@
-import db from "../index.js"; // Adjust this import to match your db file structure
+import {db} from "../index.js"; // Adjust this import to match your db file structure
 import { sendApprovalEmail } from "./emailService.js";
 export const getRequestsBySellerId = async (req, res) => {
     const { sellerId } = req.params;

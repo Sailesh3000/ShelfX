@@ -1,4 +1,4 @@
-import db from "../index.js"; 
+import {db} from "../index.js"; 
 
 export const adminStatus = async (req, res) => {
     const { username, password } = req.body;

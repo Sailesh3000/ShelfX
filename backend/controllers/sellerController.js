@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt";
-import db from "../index.js"; // Adjust this import to match your db file structure
+import {db} from "../index.js"; // Adjust this import to match your db file structure
 
 let globalUserId = null;
 
