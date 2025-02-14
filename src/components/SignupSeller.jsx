@@ -77,7 +77,7 @@ const SignupSeller = ({ onToggle }) => {
 
     try {
       setLoading(true);
-      const response = await fetch('https://shelfx-backend.netlify.app/SignupSeller', {
+      const response = await fetch('https://shelf-x-backend.vercel.app/SignupSeller', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
