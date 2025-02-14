@@ -25,7 +25,8 @@ import {
     editBuyerProfile,
     deleteBuyer, 
     countBuyers, 
-    getBookStatus 
+    getBookStatus,
+    trackRequest // for chatbot
 } from "../controllers/buyerController.js";
 import { 
     getRequestsBySellerId, 
@@ -64,6 +65,7 @@ router.put("/buyers/:id", updateBuyer);
 router.delete("/buyers/:id", deleteBuyer); // admin
 router.get("/countBuyers", countBuyers); // admin
 router.get("/status", getBookStatus);
+router.get("/chatbot/track", trackRequest);
 
 // Requests
 router.post("/request", postRequest);

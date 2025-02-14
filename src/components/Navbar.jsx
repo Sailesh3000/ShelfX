@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import logo from "../assets/logo.png";
 import { useLocation } from 'react-router-dom';
+import Chatbot from "./ChatBot"; 
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -88,6 +89,7 @@ const Navbar = () => {
           </ul>
         </div>
       </div>
+      <Chatbot />
     </nav>
   );
 };

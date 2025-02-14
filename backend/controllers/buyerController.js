@@ -236,3 +236,32 @@ export const getBookStatus = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+// FOR CHATBOT
+
+export const trackRequest = async (req, res) => {
+  const userId = globalUserId; 
+
+  if (!userId) {
+      return res.status(401).json({ message: "User not authenticated" });
+  }
+
+  try {
+      const sql = `
+          SELECT r.id as requestId, b.bookName, r.requestDate, r.status 
+          FROM request r
+          JOIN books b ON r.bookId = b.id
+          WHERE r.userId = ?`;
+
+      const [requests] = await db.query(sql, [userId]);
+
+      if (requests.length === 0) {
+          return res.status(404).json({ message: "No requests found" });
+      }
+
+      res.json({ requests });
+  } catch (err) {
+      console.error("Error fetching request details:", err);
+      res.status(500).json({ message: "Server error" });
+  }
+};
