@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt";
-import db from "../db.js";
+import db from "../index.js";
 
 let globalUserId = null;
 
