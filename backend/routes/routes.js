@@ -1,5 +1,6 @@
 import express from "express";
 import { booksCount } from '../controllers/bookController.js';
+import {trackRequest, postRequestChat} from '../controllers/buyerController.js';
 import {
     signupSeller,
     loginSeller,
@@ -65,7 +66,6 @@ router.put("/buyers/:id", updateBuyer);
 router.delete("/buyers/:id", deleteBuyer); // admin
 router.get("/countBuyers", countBuyers); // admin
 router.get("/status", getBookStatus);
-router.get("/chatbot/track", trackRequest);
 
 // Requests
 router.post("/request", postRequest);
@@ -82,5 +82,10 @@ router.post("/adminStatus", adminStatus);
 
 router.get('/books/count', booksCount);  // admin
 router.post('/uploadBook', upload.single('image'), uploadBook);
+
+// Chatbot
+
+router.get("/chatbot/track", trackRequest);
+router.post("/chatbot/request", postRequestChat);
 
 export default router;

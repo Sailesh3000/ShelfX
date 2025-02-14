@@ -239,29 +239,54 @@ export const getBookStatus = async (req, res) => {
 
 // FOR CHATBOT
 
-export const trackRequest = async (req, res) => {
-  const userId = globalUserId; 
-
-  if (!userId) {
-      return res.status(401).json({ message: "User not authenticated" });
-  }
-
-  try {
-      const sql = `
-          SELECT r.id as requestId, b.bookName, r.requestDate, r.status 
-          FROM request r
-          JOIN books b ON r.bookId = b.id
-          WHERE r.userId = ?`;
-
-      const [requests] = await db.query(sql, [userId]);
-
-      if (requests.length === 0) {
-          return res.status(404).json({ message: "No requests found" });
+export const trackRequest = (req, res) => {
+  const requestId = req.body.queryResult.parameters.request_id;
+  
+  const query = "SELECT status FROM requests WHERE id = ?";
+  
+  db.query(query, [requestId], (err, result) => {
+      if (err || result.length === 0) {
+          return res.json({
+              fulfillmentText: "Invalid request ID or request not found."
+          });
       }
+      
+      return res.json({
+          fulfillmentText: `Your request status is: ${result[0].status}.`
+      });
+  });
+};
 
-      res.json({ requests });
-  } catch (err) {
-      console.error("Error fetching request details:", err);
-      res.status(500).json({ message: "Server error" });
+export const postRequestChat = (req, res) => {
+  const intent = req.body.queryResult.intent.displayName;
+  
+  switch (intent) {
+      case 'new.request':
+          return handleNewRequest(req, res);
+      default:
+          return res.json({
+              fulfillmentText: "I'm not sure how to handle that request."
+          });
   }
+};
+
+const handleNewRequest = (req, res) => {
+  const bookName = req.body.queryResult.parameters.book;
+  const userId = req.body.session;
+  
+  const query = "INSERT INTO requests (user_id, book_name, status) VALUES (?, ?, 'Pending')";
+  
+  db.query(query, [userId, bookName], (err, result) => {
+      if (err) {
+          console.error(err);
+          return res.json({
+              fulfillmentText: "Sorry, I couldn't process your request."
+          });
+      }
+      
+      // Return the ID of the newly created request
+      return res.json({
+          fulfillmentText: `Your request for "${bookName}" has been placed. Your request ID is: ${result.insertId}`
+      });
+  });
 };
