@@ -1,7 +1,7 @@
 // ChatbotComponent.jsx
 import React, { useState, useRef, useEffect } from 'react';
 
-const ChatbotComponent = () => {
+const Chatbot = () => {
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
   const messagesEndRef = useRef(null);
@@ -109,4 +109,4 @@ const ChatbotComponent = () => {
   );
 };
 
-export default ChatbotComponent;
+export default Chatbot;
