@@ -9,6 +9,7 @@ import session from "express-session";
 import multer from "multer";
 import router from "./routes/routes.js";
 import MySQLStore from "express-mysql-session";
+import dialogflowRoutes from '/routes/dialogflowroutes.js';
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -66,6 +67,7 @@ export const db = mysql.createPool({
 });
 
 app.use(router);
+app.use('/api', dialogflowRoutes);
 
 // For local development
 if (process.env.NODE_ENV !== 'production') {
