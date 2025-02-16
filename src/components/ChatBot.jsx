@@ -1,14 +1,12 @@
 // ChatbotComponent.jsx
 import React, { useState, useRef, useEffect } from 'react';
 
-const Chatbot = () => {
+const ChatbotComponent = () => {
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
 
-  // Your Dialogflow project credentials
-  const DIALOGFLOW_PROJECT_ID = 'shelf-chatbot-for-book-re-uuin';
-  
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -18,17 +16,19 @@ const Chatbot = () => {
   }, [messages]);
 
   const sendMessage = async (text) => {
+    setIsLoading(true);
     // Add user message to chat
     setMessages(prev => [...prev, { text, isUser: true }]);
     setInputText('');
 
     try {
-      const response = await fetch('/api/dialogflow', {
+      const response = await fetch('https://shelf-x-mj39.vercel.app/api/dialogflow', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          sessionId: 'user-session-id', // Generate or get from user session
           queryInput: {
             text: {
               text: text,
@@ -51,6 +51,8 @@ const Chatbot = () => {
         text: 'Sorry, there was an error processing your request.', 
         isUser: false 
       }]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -77,6 +79,13 @@ const Chatbot = () => {
             </div>
           </div>
         ))}
+        {isLoading && (
+          <div className="flex justify-start">
+            <div className="bg-gray-200 text-gray-800 p-3 rounded-lg rounded-bl-none">
+              Typing...
+            </div>
+          </div>
+        )}
         <div ref={messagesEndRef} />
       </div>
 
@@ -96,10 +105,12 @@ const Chatbot = () => {
             onChange={(e) => setInputText(e.target.value)}
             placeholder="Type your message..."
             className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+            disabled={isLoading}
           />
           <button
             type="submit"
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600"
+            disabled={isLoading}
           >
             Send
           </button>
@@ -109,4 +120,4 @@ const Chatbot = () => {
   );
 };
 
-export default Chatbot;
+export default ChatbotComponent;
