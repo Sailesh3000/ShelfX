@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 import {db} from "../index.js";
-import { syncBooksWithDialogflow } from '../services/dialogflowSync';
+import { syncBooksWithDialogflow } from "../services/dialogflowSync.js";
 
 let globalUserId = null;
 

@@ -1,5 +1,5 @@
 import { EntityTypesClient } from '@google-cloud/dialogflow';
-import { db } from './index.js';
+import { db } from '../index.js';
 
 const DIALOGFLOW_PROJECT_ID = 'shelf-chatbot-for-book-re-uuin';
 const LOCATION = 'global';  // or your specific location
