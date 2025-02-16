@@ -9,7 +9,7 @@ import session from "express-session";
 import multer from "multer";
 import router from "./routes/routes.js";
 import MySQLStore from "express-mysql-session";
-import dialogflowRoutes from '/routes/dialogflowroutes.js';
+import dialogflowRoutes from './routes/dialogflowroutes.js';
 
 const app = express();
 const port = process.env.PORT || 5000;
