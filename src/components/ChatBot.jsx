@@ -1,85 +1,112 @@
-import React, { useState } from "react";
+// ChatbotComponent.jsx
+import React, { useState, useRef, useEffect } from 'react';
 
-const Chatbot = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState([
-    { text: "Hi! How can I help you today?", sender: "bot" }
-  ]);
-  const [input, setInput] = useState("");
+const ChatbotComponent = () => {
+  const [messages, setMessages] = useState([]);
+  const [inputText, setInputText] = useState('');
+  const messagesEndRef = useRef(null);
 
-  const toggleChat = () => setIsOpen(!isOpen);
+  // Your Dialogflow project credentials
+  const DIALOGFLOW_PROJECT_ID = 'shelf-chatbot-for-book-re-uuin';
+  
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
-  const sendMessage = () => {
-    if (!input.trim()) return;
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
-    setMessages([...messages, { text: input, sender: "user" }]);
-    setInput("");
+  const sendMessage = async (text) => {
+    // Add user message to chat
+    setMessages(prev => [...prev, { text, isUser: true }]);
+    setInputText('');
 
-    // Simulate bot response
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        { text: "I'm still learning! Stay tuned for updates.", sender: "bot" }
-      ]);
-    }, 1000);
+    try {
+      const response = await fetch('/api/dialogflow', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          queryInput: {
+            text: {
+              text: text,
+              languageCode: 'en-US',
+            },
+          },
+        }),
+      });
+
+      const data = await response.json();
+      
+      // Add bot response to chat
+      setMessages(prev => [...prev, { 
+        text: data.fulfillmentText, 
+        isUser: false 
+      }]);
+    } catch (error) {
+      console.error('Error:', error);
+      setMessages(prev => [...prev, { 
+        text: 'Sorry, there was an error processing your request.', 
+        isUser: false 
+      }]);
+    }
   };
 
   return (
-    <div className="fixed bottom-5 right-5 z-50">
-      {/* Chat Icon Button */}
-      <button
-        onClick={toggleChat}
-        className="bg-[#FFD369] hover:bg-[#ecc363] text-black font-bold p-3 rounded-full shadow-lg focus:outline-none"
-      >
-        💬
-      </button>
-
-      {/* Chatbox */}
-      {isOpen && (
-        <div className="w-80 h-96 bg-white shadow-xl rounded-lg flex flex-col">
-          {/* Chat Header */}
-          <div className="bg-[#393E46] text-white p-3 flex justify-between items-center rounded-t-lg">
-            <span className="font-semibold">Chat with Shelby</span>
-            <button onClick={toggleChat} className="text-lg">✖</button>
-          </div>
-
-          {/* Messages Area */}
-          <div className="flex-1 p-3 overflow-y-auto space-y-2">
-            {messages.map((msg, index) => (
-              <div
-                key={index}
-                className={`p-2 rounded-md max-w-[75%] ${
-                  msg.sender === "user"
-                    ? "bg-[#FFD369] self-end text-black ml-auto"
-                    : "bg-gray-300 text-black"
-                }`}
-              >
-                {msg.text}
-              </div>
-            ))}
-          </div>
-
-          {/* Input Field */}
-          <div className="p-2 border-t flex items-center">
-            <input
-              type="text"
-              className="flex-1 p-2 border rounded-l-md outline-none"
-              placeholder="Type your message..."
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && sendMessage()}
-            />
-            <button
-              onClick={sendMessage}
-              className="bg-[#FFD369] hover:bg-[#ecc363] text-black p-2 rounded-r-md"
+    <div className="flex flex-col h-[500px] w-[350px] border rounded-lg shadow-lg">
+      <div className="bg-blue-600 text-white p-4 rounded-t-lg">
+        <h2 className="text-xl font-semibold">Shelby</h2>
+      </div>
+      
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {messages.map((message, index) => (
+          <div
+            key={index}
+            className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
+          >
+            <div
+              className={`max-w-[70%] p-3 rounded-lg ${
+                message.isUser
+                  ? 'bg-blue-600 text-white rounded-br-none'
+                  : 'bg-gray-200 text-gray-800 rounded-bl-none'
+              }`}
             >
-              Send
-            </button>
+              {message.text}
+            </div>
           </div>
-        </div>
-      )}
+        ))}
+        <div ref={messagesEndRef} />
+      </div>
+
+      <div className="border-t p-4">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (inputText.trim()) {
+              sendMessage(inputText.trim());
+            }
+          }}
+          className="flex space-x-2"
+        >
+          <input
+            type="text"
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            placeholder="Type your message..."
+            className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+          />
+          <button
+            type="submit"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600"
+          >
+            Send
+          </button>
+        </form>
+      </div>
     </div>
   );
 };
 
-export default Chatbot;
+export default ChatbotComponent;

@@ -1,5 +1,6 @@
 import bcrypt from "bcrypt";
 import {db} from "../index.js"; // Adjust this import to match your db file structure
+import {syncBooksWithDialogflow} from "../services/dialogflowSync.js";
 
 let globalUserId = null;
 
@@ -202,6 +203,7 @@ export const uploadBook = async (req, res) => {
             userId,
             bookName,
         ]);
+        await syncBooksWithDialogflow();
         res.status(200).send("Book uploaded successfully");
     } catch (err) {
         console.error("Error uploading book:", err);

@@ -1,5 +1,6 @@
 import bcrypt from "bcrypt";
 import {db} from "../index.js";
+import { syncBooksWithDialogflow } from '../services/dialogflowSync';
 
 let globalUserId = null;
 
@@ -237,56 +238,143 @@ export const getBookStatus = async (req, res) => {
   }
 };
 
-// FOR CHATBOT
-
-export const trackRequest = (req, res) => {
-  const requestId = req.body.queryResult.parameters.request_id;
-  
-  const query = "SELECT status FROM requests WHERE id = ?";
-  
-  db.query(query, [requestId], (err, result) => {
-      if (err || result.length === 0) {
-          return res.json({
-              fulfillmentText: "Invalid request ID or request not found."
-          });
-      }
-      
-      return res.json({
-          fulfillmentText: `Your request status is: ${result[0].status}.`
-      });
+const getAvailableBooks = async () => {
+  return new Promise((resolve, reject) => {
+    const query = "SELECT bookName FROM books WHERE available = true";
+    db.query(query, (err, results) => {
+      if (err) reject(err);
+      resolve(results.map(book => book.name));
+    });
   });
 };
 
-export const postRequestChat = (req, res) => {
+export const dialogflowWebhook = async (req, res) => {
   const intent = req.body.queryResult.intent.displayName;
   
-  switch (intent) {
+  try {
+    switch (intent) {
+      case 'Default Welcome Intent':
+        return res.json({
+          fulfillmentText: "Hi! Would you like to make a new request or track an existing request?"
+        });
+
       case 'new.request':
-          return handleNewRequest(req, res);
-      default:
+        await syncBooksWithDialogflow();
+        const availableBooks = await getAvailableBooks();
+        return res.json({
+          fulfillmentText: `Here are the available books: ${availableBooks.join(', ')}. Which book would you like to request?`
+        });
+
+      case 'request.rent':
+        return handleBookRequest(req, res);
+
+      case 'request.complete':
+        return handleRequestComplete(req, res);
+
+      case 'track.status':
+        if (!req.body.queryResult.parameters.request_id) {
           return res.json({
-              fulfillmentText: "I'm not sure how to handle that request."
+            fulfillmentText: "Please provide your request ID to track the status."
           });
+        }
+        return handleTrackStatus(req, res);
+
+      default:
+        return res.json({
+          fulfillmentText: "I'm not sure how to handle that request."
+        });
+    }
+  } catch (error) {
+    console.error('Webhook Error:', error);
+    return res.json({
+      fulfillmentText: "Sorry, there was an error processing your request."
+    });
   }
 };
 
-const handleNewRequest = (req, res) => {
+const handleBookRequest = async (req, res) => {
   const bookName = req.body.queryResult.parameters.book;
-  const userId = req.body.session;
+  
+  // Verify book exists and is available
+  const checkQuery = "SELECT available FROM books WHERE bookName = ?";
+  
+  db.query(checkQuery, [bookName], (err, result) => {
+    if (err || result.length === 0) {
+      return res.json({
+        fulfillmentText: "Sorry, that book is not available."
+      });
+    }
+    
+    if (!result[0].available) {
+      return res.json({
+        fulfillmentText: "Sorry, that book is currently not available for rent."
+      });
+    }
+
+    // Store book request in context for completion
+    return res.json({
+      fulfillmentText: "Great choice! Say 'complete order' to confirm your request.",
+      outputContexts: [{
+        name: `${req.body.session}/contexts/awaiting-confirmation`,
+        lifespanCount: 5,
+        parameters: {
+          book: bookName
+        }
+      }]
+    });
+  });
+};
+
+const handleRequestComplete = (req, res) => {
+  // Get book from context
+  const contexts = req.body.queryResult.outputContexts;
+  const awaitingContext = contexts.find(ctx => 
+    ctx.name.endsWith('awaiting-confirmation')
+  );
+  
+  if (!awaitingContext || !awaitingContext.parameters.book) {
+    return res.json({
+      fulfillmentText: "Sorry, I couldn't find your book selection. Please start over."
+    });
+  }
+
+  const bookName = awaitingContext.parameters.book;
+  const userId = globalUserId; // Or however you're tracking users
   
   const query = "INSERT INTO requests (user_id, book_name, status) VALUES (?, ?, 'Pending')";
   
   db.query(query, [userId, bookName], (err, result) => {
-      if (err) {
-          console.error(err);
-          return res.json({
-              fulfillmentText: "Sorry, I couldn't process your request."
-          });
-      }
-      
-      // Return the ID of the newly created request
+    if (err) {
+      console.error(err);
       return res.json({
-          fulfillmentText: `Your request for "${bookName}" has been placed. Your request ID is: ${result.insertId}`
+        fulfillmentText: "Sorry, I couldn't process your request."
       });
+    }
+    
+    return res.json({
+      fulfillmentText: `Your request has been placed! Your request ID is: ${result.insertId}. You can use this ID to track your request status.`
+    });
+  });
+};
+
+const handleTrackStatus = (req, res) => {
+  const requestId = req.body.queryResult.parameters.request_id;
+  
+  const query = `
+    SELECT r.status, b.bookName 
+    FROM requests r
+    JOIN books b ON r.bookId = b.id
+    WHERE r.id = ?`;
+  
+  db.query(query, [requestId], (err, result) => {
+    if (err || result.length === 0) {
+      return res.json({
+        fulfillmentText: "Sorry, I couldn't find a request with that ID."
+      });
+    }
+    
+    return res.json({
+      fulfillmentText: `Status for request #${requestId} (${result[0].bookName}): ${result[0].status}`
+    });
   });
 };

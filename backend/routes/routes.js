@@ -1,6 +1,6 @@
 import express from "express";
 import { booksCount } from '../controllers/bookController.js';
-import {trackRequest, postRequestChat} from '../controllers/buyerController.js';
+import {dialogflowWebhook} from '../controllers/buyerController.js';
 import {
     signupSeller,
     loginSeller,
@@ -84,7 +84,6 @@ router.post('/uploadBook', upload.single('image'), uploadBook);
 
 // Chatbot
 
-router.get("/chatbot/track", trackRequest);
-router.post("/chatbot/request", postRequestChat);
+router.post("/webhook", dialogflowWebhook);
 
 export default router;

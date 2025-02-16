@@ -14,6 +14,7 @@ import {
 } from "@mui/material";
 import axios from "axios";
 import bcrypt from 'bcryptjs';
+import ChatBot from "./ChatBot";
 
 
 const BookGrid = () => {
@@ -651,6 +652,7 @@ const BookGrid = () => {
                 </div>
               </div>
             )}
+            <Chatbot />
     </div>
   );
 };
