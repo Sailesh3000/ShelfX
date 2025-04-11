@@ -30,6 +30,7 @@ const BookGrid = () => {
     severity: "success",
   });
   const [seller, setSeller] = useState(null);
+  const [authenticated, setAuthenticated] = useState(false);
   const [currentBookId, setCurrentBookId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [userPincode, setUserPincode] = useState("");
@@ -52,6 +53,31 @@ const BookGrid = () => {
     confirmPassword: '',
   });
 
+  useEffect(() => {
+    checkAuthentication();
+  }, []);
+  
+  // Function to check if user is authenticated
+  const checkAuthentication = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/check-auth', {
+        withCredentials: true,
+      });
+      
+      if (response.data.authenticated) {
+        setAuthenticated(true);
+        fetchUserDetails();
+      } else {
+        // Redirect to login page if not authenticated
+        navigate('/login-Buyer', { state: { from: '/BookGrid' } });
+      }
+    } catch (error) {
+      console.error("Authentication check failed:", error);
+      // Redirect to login page on error
+      navigate('/login-Buyer', { state: { from: '/BookGrid' } });
+    }
+  };
+
 
   const handleChange2 = (e) => {
     const { name, value } = e.target;
@@ -60,17 +86,20 @@ const BookGrid = () => {
       [name]: value,
     });
   };
-    const fetchStatusRequests = async () => {
-      try {
-        const response = await axios.get("http://localhost:5000/status");
-        console.log(response);
-        setRequests(response.data.requests);
-      } catch (err) {
-        setError(err.response?.data?.message || err.message); 
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchStatusRequests = async () => {
+    try {
+      const response = await axios.get("http://localhost:5000/status", {
+        withCredentials: true,
+      });
+      console.log(response);
+      setRequests(response.data.requests);
+    } catch (err) {
+      setError(err.response?.data?.message || err.message); 
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
 
   const navigate = useNavigate();
@@ -87,8 +116,8 @@ const BookGrid = () => {
         bgColor = "bg-red-100";
         break;
       default:
-        statusColor = "bg-white-100 text-pink-700";
-        bgColor = "bg-white-100";
+        statusColor = "bg-white text-pink-700";
+        bgColor = "bg-white";
     }
   
     return (
@@ -177,6 +206,7 @@ const BookGrid = () => {
         body: JSON.stringify({
           username: formData1.username,
         }),
+        credentials: 'include',
       });
 
       const data = await response.json();
@@ -209,11 +239,18 @@ const BookGrid = () => {
         body: JSON.stringify({
           newPassword: formData2.newPassword,
         }),
+        credentials: 'include',
       });
 
       const data = await response.json();
       if (data.message === 'Password updated successfully') {
         alert('Password updated successfully!');
+        setFormData2({
+          ...formData2,
+          password: '',
+          newPassword: '',
+          confirmPassword: ''
+        });
       } else {
         alert('Update failed');
       }
@@ -534,7 +571,7 @@ const BookGrid = () => {
 {/* /////////////////////////////////// chnaging password ////////////////  */}
 <Dialog open={openpassDialog} onClose={handleDialogClose} maxWidth="sm" fullWidth>
  <DialogTitle sx={{ backgroundColor: '#393E46', color: '#FFFFFF', fontWeight: 'bold' }}>
-   Change Your Name
+   Change Your Password
  </DialogTitle>
  <DialogContent sx={{ backgroundColor: '#EEEEEE', paddingTop: '16px' }}>
    <TextField
@@ -549,22 +586,22 @@ const BookGrid = () => {
      sx={{ backgroundColor: '#FFFFFF', borderRadius: '4px' }}
    />
    <TextField
-     name="newpassword"
-     label="newpassword"
+     name="newPassword"
+     label="New Password"
      variant="outlined"
-       type="newpassword"
-     value={formData2.newpassword}
+     type="password"
+     value={formData2.newPassword}
      onChange={handleChange2}
      fullWidth
      className="mt-4"
      sx={{ backgroundColor: '#FFFFFF', borderRadius: '4px' }}
    />
     <TextField
-     name="confirmpassword"
-     label="confirmpassword"
+     name="confirmPassword"
+     label="Confirm Password"
      variant="outlined"
-       type="confirmpassword"
-     value={formData2.confirmpassword}
+     type="password"
+     value={formData2.confirmPassword}
      onChange={handleChange2}
      fullWidth
      className="mt-4"

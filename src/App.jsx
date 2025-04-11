@@ -21,8 +21,19 @@ function App() {
         <Route path="/BookGrid" element={<BookGrid />} />
         <Route path="/adminLogin" element={<AdminLogin />} />
         <Route path="/adminDashboard" element={<AdminDashboard />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
+  );
+}
+
+function NotFound() {
+  return (
+    <div className="not-found-container text-white text-center mt-5">
+      <h1>404 - Route Not Found!</h1>
+      <p>The page you're looking for doesn't exist.</p>
+      {/* You can add a link back to home or other navigation options */}
+    </div>
   );
 }
 

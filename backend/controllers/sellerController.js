@@ -1,7 +1,6 @@
 import bcrypt from "bcrypt";
-import db from "../db.js"; // Adjust this import to match your db file structure
-
-let globalUserId = null;
+import db from "../db.js";
+import cloudinary from "../config/cloudinary.js";
 
 export const signupSeller = async (req, res) => {
     const { username, email, password } = req.body;
@@ -17,6 +16,8 @@ export const signupSeller = async (req, res) => {
 };
 
 export const loginSeller = async (req, res) => {
+    console.log("Before login - Session ID:", req.sessionID);
+    
     const { email, password } = req.body;
     try {
         const sql = "SELECT id, email, password FROM users WHERE email = ?";
@@ -25,14 +26,19 @@ export const loginSeller = async (req, res) => {
 
         const isMatch = await bcrypt.compare(password, rows[0].password);
         if (isMatch) {
-            globalUserId = rows[0].id;
-            req.session.userId = globalUserId;
+            req.session.userId = rows[0].id;
+            
+            console.log("Setting userId in session:", rows[0].id);
+            
             req.session.save(err => {
                 if (err) {
                     console.error("Session save error:", err);
                     return res.status(500).send("Server error");
                 }
-                res.status(200).send("Login successful");
+                console.log("After login - Session ID:", req.sessionID);
+                console.log("Session after save:", req.session);
+                res.setHeader("Access-Control-Allow-Credentials", "true"); 
+                res.status(200).json({ message: "Login successful", session: req.session });
             });
         } else {
             res.status(401).send("Invalid email or password");
@@ -44,7 +50,7 @@ export const loginSeller = async (req, res) => {
 };
 
 export const getDetails = async (req, res) => {
-    const userId = globalUserId;
+    const userId = req.session.userId;
     if (!userId) return res.status(401).json({ message: "User not authenticated" });
 
     try {
@@ -62,7 +68,7 @@ export const getDetails = async (req, res) => {
             price: book.price,
             id: book.id,
             bookName: book.bookname,
-            imageUrl: book.imageData ? `data:image/jpeg;base64,${book.imageData.toString("base64")}` : null,
+            imageUrl: book.imageData || null,  // ✅ Use the Cloudinary URL directly
         }));
 
         res.json({ user, books });
@@ -145,73 +151,111 @@ export const deleteSellerById = async (req, res) => {
 };
 
 export const uploadBook = async (req, res) => {
-    const userId = globalUserId;
+    const userId = req.session.userId;
 
     if (!userId) {
         return res.status(401).send("User not authenticated. Please log in.");
     }
 
-    // Get the user's subscription
-    const [subscriptionRows] = await db.query(
-        "SELECT plan FROM subscriptions WHERE userId = ?",
-        [userId]
-    );
+    // Get the user's subscription plan
+    const [subscriptionRows] = await db.query("SELECT plan FROM subscriptions WHERE userId = ?", [userId]);
     const userPlan = subscriptionRows[0]?.plan;
 
     if (!userPlan) {
-        return res
-            .status(403)
-            .json({ redirect: "http://localhost:5173/subscription" });
+        return res.status(403).json({ redirect: "http://localhost:5173/subscription" });
     }
 
-    const uploadLimits = {
-        free: 5,
-        starter: 50,
-        premium: Infinity,
-    };
+    const uploadLimits = { free: 5, starter: 50, premium: Infinity };
 
-    const [bookCountRows] = await db.query(
-        "SELECT COUNT(*) as count FROM books WHERE userId = ?",
-        [userId]
-    );
+    const [bookCountRows] = await db.query("SELECT COUNT(*) as count FROM books WHERE userId = ?", [userId]);
     const currentUploadCount = bookCountRows[0].count;
 
     if (currentUploadCount >= uploadLimits[userPlan]) {
-        return res
-            .status(403)
-            .json({ redirect: "http://localhost:5173/subscription" });
+        return res.status(403).json({ redirect: "http://localhost:5173/subscription" });
     }
 
-    const { bookName, address, pincode, price } = req.body;
-    const image = req.file;
+    const { bookName, address, pincode, price, image } = req.body;
 
-    if (!image) {
-        return res.status(400).send("No image provided");
+    if (!bookName || !address || !pincode || !price || !image) {
+        return res.status(400).json({ message: "Missing required fields" });
     }
 
     try {
-        const imageBuffer = image.buffer;
+        // Validate and extract Base64 data
+        let base64Data;
 
-        const sql =
-            "INSERT INTO books (address, pincode, price, imageData, userId, bookName) VALUES (?, ?, ?, ?, ?, ?)";
-        await db.query(sql, [
+        if (image.startsWith('data:image')) {
+            console.log("Full Base64 String (First 50 chars):", image.substring(0, 50));
+
+            const base64Parts = image.split(','); // Split at the comma
+            if (base64Parts.length !== 2) {
+                return res.status(400).json({ message: "Invalid image format." });
+            }
+            base64Data = base64Parts[1]; // Get only the Base64 data
+        } else {
+            return res.status(400).json({ message: "Image format not supported. Please upload a Base64-encoded image." });
+        }
+
+        // Upload image to Cloudinary
+        const uploadOptions = {
+            folder: "shelfx_books",
+            public_id: `book_${userId}_${Date.now()}`,
+            transformation: [
+                { width: 1200, height: 1600, crop: "limit" },
+                { fetch_format: "auto" },
+                { quality: "auto:good" }
+            ],
+            tags: ["book", `user_${userId}`]
+        };
+
+        const uploadResult = await cloudinary.uploader.upload(`data:image/jpeg;base64,${base64Data}`, uploadOptions);
+
+        console.log("Cloudinary Upload Result:", uploadResult);
+
+        // Save book details to database
+        const sql = "INSERT INTO books (address, pincode, price, imageData, userId, bookName) VALUES (?, ?, ?, ?, ?, ?)";
+        const [dbResult] = await db.query(sql, [
             address,
             pincode,
             price,
-            imageBuffer,
+            uploadResult.secure_url,
             userId,
             bookName,
         ]);
-        res.status(200).send("Book uploaded successfully");
+
+        res.status(201).json({
+            message: "Book uploaded successfully",
+            book: {
+                id: dbResult.insertId,
+                address,
+                pincode,
+                price,
+                bookName,
+                imageUrl: uploadResult.secure_url,
+                imageDetails: {
+                    format: uploadResult.format,
+                    size: uploadResult.bytes,
+                    dimensions: {
+                        width: uploadResult.width,
+                        height: uploadResult.height
+                    }
+                }
+            }
+        });
+
     } catch (err) {
         console.error("Error uploading book:", err);
-        res.status(500).send("Server error");
+        res.status(500).json({
+            message: "Failed to upload book",
+            error: process.env.NODE_ENV === "development" ? err.message : undefined
+        });
     }
 };
 
+
 export const deleteBook = async(req, res) => {
       const bookId = req.params.id;
-      const userId = globalUserId;
+      const userId = req.session.userId;
     
       try {
         const sqlDelete = "DELETE FROM books WHERE id = ? AND userId = ?";
@@ -233,7 +277,7 @@ export const deleteBook = async(req, res) => {
 
     export const subscribePlan = async (req, res) => {
         const { selectedPlan } = req.params;
-        const userId = globalUserId;
+        const userId = req.session.userId;
     
         if (!userId) {
             return res.status(401).send("User not authenticated");
@@ -263,7 +307,7 @@ export const deleteBook = async(req, res) => {
 
 
 export const editUserProfile = async (req, res) => {
-    const userId = globalUserId; 
+    const userId = req.session.userId; 
     const { username,newpassword } = req.body; 
   
     if (!userId) {

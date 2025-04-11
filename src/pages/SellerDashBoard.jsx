@@ -5,15 +5,19 @@ import axios from 'axios';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, CircularProgress, Snackbar, Alert } from '@mui/material';
 import RequestList from '../components/RequestList';
 import bcrypt from 'bcryptjs';
+
 const SellerProfile = () => {
   const [activeTab, setActiveTab] = useState('myBooks'); 
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [openpassDialog, setOpenpassDialog] = useState(false);
   const [opennameDialog, setOpennameDialog] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [authenticated, setAuthenticated] = useState(false);
   const [uploadedImages, setUploadedImages] = useState([]);
+  const [subscription, setSubscription] = useState(null);
   const [formData, setFormData] = useState({
     bookName: '',
     address: '',
@@ -23,16 +27,41 @@ const SellerProfile = () => {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [formData1, setFormData1] = useState({
     username: '',
-    
     password: '',
-    confirmPassword: '',
   });
   const [formData2, setFormData2] = useState({
-   
     password: '',
     newpassword:'',
     confirmPassword: '',
   });
+
+  const navigate = useNavigate(); 
+
+  // Check authentication on component mount
+  useEffect(() => {
+    checkAuthentication();
+  }, []);
+
+  // Function to check if user is authenticated
+  const checkAuthentication = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/check-auth', {
+        withCredentials: true,
+      });
+      
+      if (response.data.authenticated) {
+        setAuthenticated(true);
+        fetchUserDetails();
+      } else {
+        // Redirect to login page if not authenticated
+        navigate('/login-seller', { state: { from: '/seller-profile' } });
+      }
+    } catch (error) {
+      console.error("Authentication check failed:", error);
+      // Redirect to login page on error
+      navigate('/login-seller', { state: { from: '/seller-profile' } });
+    }
+  };
 
   const handleChange2 = (e) => {
     const { name, value } = e.target;
@@ -41,7 +70,6 @@ const SellerProfile = () => {
       [name]: value,
     });
   };
-  const navigate = useNavigate(); 
 
   const handleSnackbarClose = () => {
     setSnackbar({ ...snackbar, open: false });
@@ -56,7 +84,7 @@ const SellerProfile = () => {
     setOpenpassDialog(false);
     setOpennameDialog(false);
     setSelectedImage(null);
-    setFormData({ address: '', pincode: '', price: '' });
+    setFormData({ bookName: '', address: '', pincode: '', price: '' });
   };
 
   const handleTabClick = (tab) => {
@@ -64,16 +92,18 @@ const SellerProfile = () => {
   };
 
   const handleImageSelect = (event) => {
-    const file = event.target.files[0];
-    if (file && file.type.startsWith('image/')) {
-      const imageURL = URL.createObjectURL(file);
-      setSelectedImage(imageURL);
-    }
+    if (event.target.files && event.target.files[0]) {
+      setSelectedImage(event.target.files[0]); // Store the actual File object
+      
+      // If you need a preview, you can separately create a blob URL
+      const previewUrl = URL.createObjectURL(event.target.files[0]);
+      setImagePreview(previewUrl);
+  }
   };
   
   const handleImageRemove = () => {
     if (selectedImage) {
-      URL.revokeObjectURL(selectedImage);
+      URL.revokeObjectURL(imagePreview);
     }
     setSelectedImage(null);
   };
@@ -84,78 +114,107 @@ const SellerProfile = () => {
   };
 
   const handleSubmit = async () => {
-    const { bookName,address, pincode, price } = formData;
+    const { bookName, address, pincode, price } = formData;
 
-    if (!bookName || !address || !pincode || !price) {
-      setSnackbar({ open: true, message: 'Please fill in all fields', severity: 'warning' });
-      return;
+    if (!bookName || !address || !pincode || !price || !selectedImage) {
+        setSnackbar({ open: true, message: 'Please fill in all fields including an image', severity: 'warning' });
+        return;
     }
 
-    const data = new FormData();
-    data.append('bookName', bookName);
-    data.append('address', address);
-    data.append('pincode', pincode);
-    data.append('price', price);
+    console.log("Selected Image:", selectedImage); // Debugging log
 
-    if (selectedImage) {
-      const response = await fetch(selectedImage);
-      const blob = await response.blob();
-      data.append('image', blob, 'image.jpg');
+    // Ensure selectedImage is a valid File
+    if (!(selectedImage instanceof File)) {
+        setSnackbar({ open: true, message: 'Invalid file selection', severity: 'error' });
+        return;
     }
 
     try {
-      const response = await axios.post('http://localhost:5000/uploadBook', data, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-        withCredentials: true,
-      });
+        // Convert image to base64
+        const base64Image = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = (error) => reject(error);
+            reader.readAsDataURL(selectedImage);
+        });
 
-      if (response.status === 200) {
-        setSnackbar({ open: true, message: 'Book uploaded successfully', severity: 'success' });
-        handleDialogClose();
-        setUploadedImages(prev => [...prev, response.data.book]); 
-        fetchUserDetails();// Assuming response contains the uploaded book
-      } else {
-        console.error('Upload failed:', response.data);
-        setSnackbar({ open: true, message: 'Upload failed. Please try again.', severity: 'error' });
-      }
-    }  catch (error) {
-      if (error.response && error.response.status === 403) {
-        window.location.href = error.response.data.redirect;
-      } else {
+        console.log("Base64 Image:", base64Image.slice(0, 50)); // Debugging log (first 50 chars)
+
+        const uploadResponse = await axios.post('http://localhost:5000/uploadBook', {
+            bookName,
+            address,
+            pincode,
+            price,
+            image: base64Image, // Send base64 image
+        }, {
+            withCredentials: true,
+        });
+
+        if (uploadResponse.status === 201) {
+            setSnackbar({ open: true, message: 'Book uploaded successfully', severity: 'success' });
+            handleDialogClose();
+            setUploadedImages(prev => [...prev, uploadResponse.data.book]);
+            fetchUserDetails();
+        }
+    } catch (error) {
         console.error('Failed to upload book:', error);
-        setSnackbar({ open: true, message: 'Failed to upload book. Please try again.', severity: 'error' });
-      }
-  };
-}
+        setSnackbar({
+            open: true,
+            message: error.response?.data?.message || 'Failed to upload book',
+            severity: 'error'
+        });
+    }
+};
+
 
   const fetchUserDetails = async () => {
     try {
       const response = await axios.get('http://localhost:5000/details', {
         withCredentials: true,
       });
-      setUser(response.data.user); // Assuming user now has username
+      setUser(response.data.user);
+      console.log(response.data.user);
       setUploadedImages(response.data.books);
+      
+      // After setting user, fetch subscription
+      if (response.data.user && response.data.user.id) {
+        fetchSubscription(response.data.user.id);
+      }
     } catch (error) {
       console.error("Error fetching current user:", error);
       setUser(null);
       setUploadedImages([]);
       setSnackbar({ open: true, message: 'Failed to fetch user details', severity: 'error' });
+      
+      // If 401 Unauthorized, redirect to login
+      if (error.response && error.response.status === 401) {
+        navigate('/login', { state: { from: '/seller-profile' } });
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchUserDetails();
+  const fetchSubscription = async (userId) => {
+    if (!userId) return;
+    
+    try {
+      const response = await axios.get(`http://localhost:5000/subscription/${userId}`, {
+        withCredentials: true,
+      });
+      setSubscription(response.data);
+    } catch (error) {
+      console.error("Error fetching subscription:", error);
+    }
+  };
 
+  useEffect(() => {
     return () => {
       if (selectedImage) {
-        URL.revokeObjectURL(selectedImage);
+        URL.revokeObjectURL(imagePreview);
       }
     };
-  }, []);
+  }, [selectedImage]);
 
   const handleDelete = async (bookId) => {
     try {
@@ -166,14 +225,14 @@ const SellerProfile = () => {
       if (response.status === 200) {
         setUploadedImages(prev => prev.filter(book => book.id !== bookId));
         setSnackbar({ open: true, message: 'Book removed successfully', severity: 'success' });
-        fetchUserDetails(); // Refresh the uploaded books
+        fetchUserDetails();
       }
     } catch (error) {
       console.error("Error removing book:", error);
       setSnackbar({ open: true, message: 'Failed to remove book. Please try again.', severity: 'error' });
     }
   };
-  //////////////////////////////
+
   const handleChange1 = (e) => {
     const { name, value } = e.target;
     console.log(`Changed: ${name} = ${value}`);
@@ -187,7 +246,7 @@ const SellerProfile = () => {
     e.preventDefault();
     
     console.log('Form Password:', formData1.password);
-    console.log('User Password:', user.password); // Ensure correct casing
+    console.log('User Password:', user.password);
   
     // Ensure that user.password and formData1.password are properly defined.
     const passwordMatch = await bcrypt.compare(formData1.password, user.password);
@@ -204,20 +263,21 @@ const SellerProfile = () => {
         body: JSON.stringify({
           username: formData1.username,
         }),
+        credentials: 'include',  // Include cookies
       });
   
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
   
-      const data = await response.json(); // Parse JSON response
+      const data = await response.json();
   
       if (data.message === 'Username updated successfully') {
         alert('Username updated successfully!');
-        // Optionally, clear the form fields
-        // setFormData1({ username: '', password: '' });
+        fetchUserDetails();  // Refresh user details
+        handleDialogClose();
       } else {
-        alert('Update failed: ' + data.message); // Provide the server's error message
+        alert('Update failed: ' + data.message);
       }
     } catch (error) {
       console.error('Error:', error);
@@ -227,13 +287,10 @@ const SellerProfile = () => {
   
   const handleSubmitpassword = async (e) => {
     e.preventDefault();
-    console.log('Form Password:', formData2.password);
-    console.log('User Password:', user.Password);
     
-    // Ensure that user.Password and formData1.password are properly defined.
     const passwordMatch = await bcrypt.compare(formData2.password, user.password);
-    if (!passwordMatch || formData2.newpassword!== formData2.confirmpassword ) {
-      alert('Passwords do not match!');
+    if (!passwordMatch || formData2.newpassword !== formData2.confirmPassword) {
+      alert('Current password is incorrect or new passwords do not match!');
       return;
     }
   
@@ -244,11 +301,13 @@ const SellerProfile = () => {
         body: JSON.stringify({
           newpassword: formData2.newpassword,
         }),
+        credentials: 'include',  // Include cookies
       });
   
-      const data = await response.json(); // Parse JSON response
+      const data = await response.json();
       if (data.message === 'password updated successfully') {
-        alert('password updated successfully!');
+        alert('Password updated successfully!');
+        handleDialogClose();
       } else {
         alert('Update failed');
       }
@@ -299,7 +358,6 @@ const SellerProfile = () => {
           >
             My Books
           </button>
-         
         </div>
         <div className="flex items-center space-x-4">
           <FaUserCircle className="w-8 h-8 text-white" />
@@ -315,7 +373,7 @@ const SellerProfile = () => {
       </nav>
 
       {/* Tab Content */}
-      <div className="p-8">
+      <div className="p-8 ">
         {activeTab === 'home' ? (
           <div>
             <h2 className="text-2xl font-bold text-[#222831]">Welcome to ShelfX!</h2>
@@ -386,173 +444,180 @@ const SellerProfile = () => {
       </div>
 
       {/* Upload Dialog */}
-      {/* Upload Dialog */}
-<Dialog open={openDialog} onClose={handleDialogClose} maxWidth="sm" fullWidth>
-  <DialogTitle sx={{ backgroundColor: '#393E46', color: '#FFFFFF', fontWeight: 'bold' }}>
-    Upload a Book
-  </DialogTitle>
-  <DialogContent sx={{ backgroundColor: '#EEEEEE', paddingTop: '16px' }}>
-    <input
-      type="file"
-      onChange={handleImageSelect}
-      accept="image/*"
-      className="block w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 cursor-pointer focus:outline-none"
-    />
-    {selectedImage && (
-      <div className="mt-4">
-        <img
-          src={selectedImage}
-          alt="Selected"
-          className="w-full h-auto rounded-md shadow-md"
-        />
-        <button
-          onClick={handleImageRemove}
-          className="mt-2 text-red-500 hover:underline"
-        >
-          Remove Image
-        </button>
-      </div>
-    )}
-    <TextField
-          id="bookName"  // Add this ID
-          label="Book Name"  // New input label
-          variant="filled"
-          value={formData.bookName}  // Bind value
-          onChange={handleInputChange}  // Handle change
-          fullWidth
-          className="mt-4"
-          sx={{
-            backgroundColor: '#FFFFFF',
-            borderRadius: '4px',
-          }}
-    />
-    <TextField
-      id="address"
-      label="Address"
-      variant="filled"
-      value={formData.address}
-      onChange={handleInputChange}
-      fullWidth
-      className="mt-4"
-      sx={{
-        backgroundColor: '#FFFFFF',
-        borderRadius: '4px',
-      }}
-    />
-    <TextField
-      id="pincode"
-      label="Pincode"
-      variant="filled"
-      value={formData.pincode}
-      onChange={handleInputChange}
-      fullWidth
-      className="mt-4"
-      sx={{
-        backgroundColor: '#FFFFFF',
-        borderRadius: '4px',
-      }}
-    />
-    <TextField
-      id="price"
-      label="Price"
-      variant="filled"
-      value={formData.price}
-      onChange={handleInputChange}
-      fullWidth
-      className="mt-4"
-      sx={{
-        backgroundColor: '#FFFFFF',
-        borderRadius: '4px',
-      }}
-    />
-  </DialogContent>
-  <DialogActions sx={{ backgroundColor: '[#FFD369]', padding: '16px' }}>
-    <Button onClick={handleDialogClose} color="secondary" variant="contained">
-      Cancel
-    </Button>
-    <Button onClick={handleSubmit}  color="primary" variant="contained">
-      Upload
-    </Button>
-  </DialogActions>
-</Dialog>
-<Dialog open={opennameDialog} onClose={handleDialogClose} maxWidth="sm" fullWidth>
-  <DialogTitle sx={{ backgroundColor: '#393E46', color: '#FFFFFF', fontWeight: 'bold' }}>
-    Change Your Name
-  </DialogTitle>
-  <DialogContent sx={{ backgroundColor: '#EEEEEE', paddingTop: '16px' }}>
-    <TextField
-      name="password"
-      label="Current Password"
-      variant="outlined"
-      type="password"
-      value={formData1.password}
-      onChange={handleChange1}
-      fullWidth
-      className="mt-4"
-      sx={{ backgroundColor: '#FFFFFF', borderRadius: '4px' }}
-    />
-    <TextField
-      name="username"
-      label="Username"
-      variant="outlined"
-      value={formData1.username}
-      onChange={handleChange1}
-      fullWidth
-      className="mt-4"
-      sx={{ backgroundColor: '#FFFFFF', borderRadius: '4px' }}
-    />
-  </DialogContent>
-  <DialogActions sx={{ backgroundColor: '#FFD369', padding: '16px' }}>
-    <Button onClick={handleDialogClose} color="secondary" variant="outlined">Cancel</Button>
-    <Button onClick={ handleSubmitname} color="primary" variant="contained">Submit</Button>
-  </DialogActions>
-</Dialog>
+      <Dialog open={openDialog} onClose={handleDialogClose} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ backgroundColor: '#393E46', color: '#FFFFFF', fontWeight: 'bold' }}>
+          Upload a Book
+        </DialogTitle>
+        <DialogContent sx={{ backgroundColor: '#EEEEEE', paddingTop: '16px' }}>
+          <input
+            type="file"
+            onChange={handleImageSelect}
+            accept="image/*"
+            className="block w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 cursor-pointer focus:outline-none"
+          />
+          {selectedImage && (
+            <div className="mt-4">
+              <img
+                src={imagePreview}
+                alt="Selected"
+                className="w-full h-auto rounded-md shadow-md"
+              />
+              <button
+                onClick={handleImageRemove}
+                className="mt-2 text-red-500 hover:underline"
+              >
+                Remove Image
+              </button>
+            </div>
+          )}
+          <TextField
+                id="bookName"
+                label="Book Name"
+                variant="filled"
+                value={formData.bookName}
+                onChange={handleInputChange}
+                fullWidth
+                className="mt-4"
+                sx={{
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: '4px',
+                }}
+          />
+          <TextField
+            id="address"
+            label="Address"
+            variant="filled"
+            value={formData.address}
+            onChange={handleInputChange}
+            fullWidth
+            className="mt-4"
+            sx={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: '4px',
+            }}
+          />
+          <TextField
+            id="pincode"
+            label="Pincode"
+            variant="filled"
+            value={formData.pincode}
+            onChange={handleInputChange}
+            fullWidth
+            className="mt-4"
+            sx={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: '4px',
+            }}
+          />
+          <TextField
+            id="price"
+            label="Price"
+            variant="filled"
+            value={formData.price}
+            onChange={handleInputChange}
+            fullWidth
+            className="mt-4"
+            sx={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: '4px',
+            }}
+          />
+          {subscription && (
+                <div>
+                  <h3>Subscription Details</h3>
+                  <p>Plan: {subscription.plan}</p>
+                </div>
+              )}
+        </DialogContent>
+        <DialogActions sx={{ backgroundColor: '#EEEEEE', padding: '16px' }}>
+          <Button onClick={handleDialogClose} color="secondary" variant="contained">
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} color="primary" variant="contained">
+            Upload
+          </Button>
+        </DialogActions>
+      </Dialog>
 
- {/* /////////////////////////////////// chnaging password ////////////////  */}
- <Dialog open={openpassDialog} onClose={handleDialogClose} maxWidth="sm" fullWidth>
-  <DialogTitle sx={{ backgroundColor: '#393E46', color: '#FFFFFF', fontWeight: 'bold' }}>
-    Change Your Name
-  </DialogTitle>
-  <DialogContent sx={{ backgroundColor: '#EEEEEE', paddingTop: '16px' }}>
-    <TextField
-      name="password"
-      label="Current Password"
-      variant="outlined"
-      type="password"
-      value={formData2.password}
-      onChange={handleChange2}
-      fullWidth
-      className="mt-4"
-      sx={{ backgroundColor: '#FFFFFF', borderRadius: '4px' }}
-    />
-    <TextField
-      name="newpassword"
-      label="newpassword"
-      variant="outlined"
-        type="newpassword"
-      value={formData2.newpassword}
-      onChange={handleChange2}
-      fullWidth
-      className="mt-4"
-      sx={{ backgroundColor: '#FFFFFF', borderRadius: '4px' }}
-    />
-     <TextField
-      name="confirmpassword"
-      label="confirmpassword"
-      variant="outlined"
-        type="confirmpassword"
-      value={formData2.confirmpassword}
-      onChange={handleChange2}
-      fullWidth
-      className="mt-4"
-      sx={{ backgroundColor: '#FFFFFF', borderRadius: '4px' }}
-    />
-  </DialogContent>
-  <DialogActions sx={{ backgroundColor: '#FFD369', padding: '16px' }}>
-    <Button onClick={handleDialogClose} color="secondary" variant="outlined">Cancel</Button>
-    <Button onClick={handleSubmitpassword} color="primary" variant="contained">Submit</Button>
-  </DialogActions>
-</Dialog>
+      {/* Change Name Dialog */}
+      <Dialog open={opennameDialog} onClose={handleDialogClose} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ backgroundColor: '#393E46', color: '#FFFFFF', fontWeight: 'bold' }}>
+          Change Your Name
+        </DialogTitle>
+        <DialogContent sx={{ backgroundColor: '#EEEEEE', paddingTop: '16px' }}>
+          <TextField
+            name="password"
+            label="Current Password"
+            variant="outlined"
+            type="password"
+            value={formData1.password}
+            onChange={handleChange1}
+            fullWidth
+            className="mt-4"
+            sx={{ backgroundColor: '#FFFFFF', borderRadius: '4px' }}
+          />
+          <TextField
+            name="username"
+            label="Username"
+            variant="outlined"
+            value={formData1.username}
+            onChange={handleChange1}
+            fullWidth
+            className="mt-4"
+            sx={{ backgroundColor: '#FFFFFF', borderRadius: '4px' }}
+          />
+        </DialogContent>
+        <DialogActions sx={{ backgroundColor: '#FFD369', padding: '16px' }}>
+          <Button onClick={handleDialogClose} color="secondary" variant="outlined">Cancel</Button>
+          <Button onClick={handleSubmitname} color="primary" variant="contained">Submit</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Change Password Dialog */}
+      <Dialog open={openpassDialog} onClose={handleDialogClose} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ backgroundColor: '#393E46', color: '#FFFFFF', fontWeight: 'bold' }}>
+          Change Your Password
+        </DialogTitle>
+        <DialogContent sx={{ backgroundColor: '#EEEEEE', paddingTop: '16px' }}>
+          <TextField
+            name="password"
+            label="Current Password"
+            variant="outlined"
+            type="password"
+            value={formData2.password}
+            onChange={handleChange2}
+            fullWidth
+            className="mt-4"
+            sx={{ backgroundColor: '#FFFFFF', borderRadius: '4px' }}
+          />
+          <TextField
+            name="newpassword"
+            label="New Password"
+            variant="outlined"
+            type="password"
+            value={formData2.newpassword}
+            onChange={handleChange2}
+            fullWidth
+            className="mt-4"
+            sx={{ backgroundColor: '#FFFFFF', borderRadius: '4px' }}
+          />
+          <TextField
+            name="confirmPassword"
+            label="Confirm Password"
+            variant="outlined"
+            type="password"
+            value={formData2.confirmPassword}
+            onChange={handleChange2}
+            fullWidth
+            className="mt-4"
+            sx={{ backgroundColor: '#FFFFFF', borderRadius: '4px' }}
+          />
+        </DialogContent>
+        <DialogActions sx={{ backgroundColor: '#FFD369', padding: '16px' }}>
+          <Button onClick={handleDialogClose} color="secondary" variant="outlined">Cancel</Button>
+          <Button onClick={handleSubmitpassword} color="primary" variant="contained">Submit</Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Snackbar for Notifications */}
       <Snackbar open={snackbar.open} autoHideDuration={6000} onClose={handleSnackbarClose}>
@@ -560,7 +625,8 @@ const SellerProfile = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
-      <RequestList sellerId={user.id} />
+      
+      {user && <RequestList sellerId={user.id} />}
     </div>
   );
 };

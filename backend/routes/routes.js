@@ -33,7 +33,8 @@ import {
     rejectRequest 
 } from "../controllers/requestControllers.js"; 
 import { 
-    getSubscriptions 
+    getSubscriptions,
+    getSubscriptionByUserId
 } from "../controllers/subscriptionController.js"; 
 import { adminStatus } from "../controllers/adminController.js";
 import multer from 'multer'; // Middleware for handling file uploads
@@ -75,10 +76,22 @@ router.put("/requests/:bookId/reject", rejectRequest);
 router.post("/subscribe/:selectedPlan", subscribePlan);
 router.get("/subscriptions", getSubscriptions);
 router.post("/adminStatus", adminStatus);
+router.get("/subscription/:id", getSubscriptionByUserId);
 
 // Books 
 
 router.get('/books/count', booksCount);  // admin
-router.post('/uploadBook', upload.single('image'), uploadBook);
+router.post('/uploadBook', uploadBook);
+
+// authentication middleware
+router.get("/check-auth", (req, res) => {
+    console.log("Check auth session:", req.session);
+    console.log("Session ID:", req.sessionID);
+    if (req.session.userId) {
+        res.json({ authenticated: true, userId: req.session.userId });
+    } else {
+        res.json({ authenticated: false });
+    }
+});
 
 export default router;
