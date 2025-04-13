@@ -22,7 +22,7 @@ const upload = multer({ storage });
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin:"http://localhost:5174",
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
   })
@@ -35,10 +35,10 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 const MySQLStore = expressMySQL(session);
 const sessionStore = new MySQLStore({
-  host: "localhost",
-  user: "root",
-  password: "",
-  database: "ShelfX"
+  host: process.env.DB_HOST || "localhost",
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASSWORD || "",
+  database: process.env.DB_NAME || "ShelfX"
 });
 
 app.use(
@@ -93,13 +93,10 @@ app.use(errorHandler);
 
 
 
-const db = mysql.createPool({
-  host: "localhost",
-  user: "root",
-  password: "",
-  database: "ShelfX",
-});
+// Import database connection from config file
+import db from "./db.config.js";
 
+// Export the db connection for use in other files
 export default db;
 
 app.listen(port, () => {
