@@ -14,6 +14,7 @@ import morgan from "morgan";
 import expressMySQL from "express-mysql-session";
 import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
+import redisClient, { cacheMiddleware } from "./config/redis.js";
 
 const app = express();
 const port = 5000;
@@ -22,7 +23,7 @@ const upload = multer({ storage });
 
 app.use(
   cors({
-    origin:"http://localhost:5174",
+    origin:"http://localhost:5173",
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
   })
@@ -77,7 +78,7 @@ const swaggerDefinition = {
 // Swagger options
 const options = {
   swaggerDefinition,
-  apis: ['../swagger.js'], // Path to the API docs - relative to backend directory
+  apis: ['./backend/swagger.js'], // Path to the API docs
 };
 
 // Initialize swagger-jsdoc
@@ -86,6 +87,10 @@ const swaggerSpec = swaggerJsdoc(options);
 // Serve swagger docs
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
+
+// Apply cache middleware to API routes
+// Default cache duration is 1 hour (3600 seconds)
+app.use('/api', cacheMiddleware(3600));
 
 app.use(router);
 app.use(notFound); 
@@ -99,7 +104,27 @@ import db from "./db.config.js";
 // Export the db connection for use in other files
 export default db;
 
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
-  console.log(`Swagger docs available at http://localhost:${port}/api-docs`);
-});
+// Connect to Redis before starting the server
+const startServer = async () => {
+  try {
+    // Connect to Redis
+    await redisClient.connect();
+    
+    // Start the server
+    app.listen(port, () => {
+      console.log(`Server is running on http://localhost:${port}`);
+      console.log(`Swagger docs available at http://localhost:${port}/api-docs`);
+      console.log('Redis caching enabled');
+    });
+  } catch (error) {
+    console.error('Failed to connect to Redis:', error);
+    // Start server even if Redis fails
+    app.listen(port, () => {
+      console.log(`Server is running on http://localhost:${port}`);
+      console.log(`Swagger docs available at http://localhost:${port}/api-docs`);
+      console.log('Warning: Redis caching disabled');
+    });
+  }
+};
+
+startServer();

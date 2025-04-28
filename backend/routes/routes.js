@@ -74,7 +74,7 @@ router.put("/requests/:bookId/reject", rejectRequest);
 
 // Subscriptions
 router.post("/subscribe/:selectedPlan", subscribePlan);
-router.get("/subscriptions", getSubscriptions);
+router.get("/subscription", getSubscriptions);
 router.post("/adminStatus", adminStatus);
 router.get("/subscription/:id", getSubscriptionByUserId);
 

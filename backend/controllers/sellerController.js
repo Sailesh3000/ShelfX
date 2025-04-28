@@ -158,7 +158,7 @@ export const uploadBook = async (req, res) => {
     }
 
     // Get the user's subscription plan
-    const [subscriptionRows] = await db.query("SELECT plan FROM subscriptions WHERE userId = ?", [userId]);
+    const [subscriptionRows] = await db.query("SELECT plan FROM subscription WHERE userId = ?", [userId]);
     const userPlan = subscriptionRows[0]?.plan;
 
     if (!userPlan) {
@@ -285,16 +285,16 @@ export const deleteBook = async(req, res) => {
     
         try {
             const [rows] = await db.query(
-                "SELECT * FROM subscriptions WHERE userId = ?",
+                "SELECT * FROM subscription WHERE userId = ?",
                 [userId]
             );
     
             if (rows.length > 0) {
-                const updateSql = "UPDATE subscriptions SET plan = ? WHERE userId = ?";
+                const updateSql = "UPDATE subscription SET plan = ? WHERE userId = ?";
                 await db.query(updateSql, [selectedPlan, userId]);
                 res.status(200).send("Subscription updated successfully");
             } else {
-                const insertSql = "INSERT INTO subscriptions (userId, plan) VALUES (?, ?)";
+                const insertSql = "INSERT INTO subscription (userId, plan) VALUES (?, ?)";
                 await db.query(insertSql, [userId, selectedPlan]);
                 res.status(200).send("Subscription successful");
             }

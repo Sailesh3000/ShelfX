@@ -85,7 +85,7 @@ const AdminDashboard = () => {
 
     const fetchSubscriptions = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/subscriptions");
+        const response = await axios.get("http://localhost:5000/subscription");
         setSubs(response.data);
       } catch (err) {
         console.error("Error fetching books count:", err);
