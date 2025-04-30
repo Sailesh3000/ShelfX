@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import db from "../db.js";
 import cloudinary from "../config/cloudinary.js";
+import { list } from "postcss";
 
 export const signupSeller = async (req, res) => {
     const { username, email, password } = req.body;
@@ -59,7 +60,7 @@ export const getDetails = async (req, res) => {
         if (rowsUser.length === 0) return res.status(404).json({ message: "User not found" });
 
         const user = rowsUser[0];
-        const sqlBooks = "SELECT id, bookname, address, pincode, price, imageData FROM books WHERE userId = ?";
+        const sqlBooks = "SELECT id, bookname, address, pincode, price, imageData, listingType FROM books WHERE userId = ?";
         const [rowsBooks] = await db.query(sqlBooks, [userId]);
 
         const books = rowsBooks.map(book => ({
@@ -69,6 +70,7 @@ export const getDetails = async (req, res) => {
             id: book.id,
             bookName: book.bookname,
             imageUrl: book.imageData || null,  // ✅ Use the Cloudinary URL directly
+            listingType: book.listingType,
         }));
 
         res.json({ user, books });
@@ -174,7 +176,7 @@ export const uploadBook = async (req, res) => {
         return res.status(403).json({ redirect: "http://localhost:5173/subscription" });
     }
 
-    const { bookName, address, pincode, price, image } = req.body;
+    const { bookName, address, pincode, price, image, listingType } = req.body;
 
     if (!bookName || !address || !pincode || !price || !image) {
         return res.status(400).json({ message: "Missing required fields" });
@@ -213,7 +215,7 @@ export const uploadBook = async (req, res) => {
         console.log("Cloudinary Upload Result:", uploadResult);
 
         // Save book details to database
-        const sql = "INSERT INTO books (address, pincode, price, imageData, userId, bookName) VALUES (?, ?, ?, ?, ?, ?)";
+        const sql = "INSERT INTO books (address, pincode, price, imageData, userId, bookName, listingType) VALUES (?, ?, ?, ?, ?, ?, ?)";
         const [dbResult] = await db.query(sql, [
             address,
             pincode,
@@ -221,6 +223,7 @@ export const uploadBook = async (req, res) => {
             uploadResult.secure_url,
             userId,
             bookName,
+            listingType || 'sell', // Default to 'sell' if not provided
         ]);
 
         res.status(201).json({
@@ -231,6 +234,7 @@ export const uploadBook = async (req, res) => {
                 pincode,
                 price,
                 bookName,
+                listingType: listingType || 'sell',
                 imageUrl: uploadResult.secure_url,
                 imageDetails: {
                     format: uploadResult.format,

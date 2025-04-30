@@ -23,8 +23,13 @@ const SellerProfile = () => {
     address: '',
     pincode: '',
     price: '',
+    listingType: 'sell' // Default to sell
   });
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
   const [formData1, setFormData1] = useState({
     username: '',
     password: '',
@@ -145,6 +150,7 @@ const SellerProfile = () => {
             address,
             pincode,
             price,
+            listingType: formData.listingType,
             image: base64Image, // Send base64 image
         }, {
             withCredentials: true,
@@ -158,6 +164,10 @@ const SellerProfile = () => {
         }
     } catch (error) {
         console.error('Failed to upload book:', error);
+        if (error.response?.status === 403) {
+            navigate('/subscription');
+            return;
+        }
         setSnackbar({
             open: true,
             message: error.response?.data?.message || 'Failed to upload book',
@@ -175,6 +185,12 @@ const SellerProfile = () => {
       setUser(response.data.user);
       console.log(response.data.user);
       setUploadedImages(response.data.books);
+      console.log(response.data.books);
+      if (response.data.books) {
+        response.data.books.forEach(book => {
+          console.log('Fetched listingType:', book.listingType);
+        });
+      }
       
       // After setting user, fetch subscription
       if (response.data.user && response.data.user.id) {
@@ -425,7 +441,12 @@ const SellerProfile = () => {
                   <div key={book.id} className="bg-white p-4 border rounded-md shadow-md flex flex-col justify-between min-h-[350px] w-[250px]">
                     <img src={book.imageUrl} alt={`Uploaded ${book.address}`} className="max-w-full max-h-[300px] object-cover rounded-md mb-2" />
                     <div className="mt-2">
-                    <p className="text-[#393E46]"><strong>Book Name:</strong> {book.bookName}</p>
+                      <div className="flex justify-between items-center mb-2">
+                        <p className="text-[#393E46]"><strong>Book Name:</strong> {book.bookName}</p>
+                        <span className={`px-2 py-1 rounded text-white text-sm ${book.listingType?.trim().toLowerCase() === "rent" ? 'bg-blue-500' : 'bg-green-500'}`}>
+  {book.listingType?.trim().toLowerCase() === "rent" ? 'RENT' : 'SELL'}
+</span>
+                        </div>
                       <p className="text-[#393E46]"><strong>Address:</strong> {book.address}</p>
                       <p className="text-[#393E46]"><strong>Pincode:</strong> {book.pincode}</p>
                       <p className="text-[#393E46]"><strong>Price:</strong> ${book.price}</p>
@@ -522,6 +543,17 @@ const SellerProfile = () => {
               borderRadius: '4px',
             }}
           />
+          <div className="mt-4">
+            <select
+              id="listingType"
+              value={formData.listingType}
+              onChange={handleInputChange}
+              className="w-full p-3 bg-white border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="sell">Sell</option>
+              <option value="rent">Rent</option>
+            </select>
+          </div>
           {subscription && (
                 <div>
                   <h3>Subscription Details</h3>

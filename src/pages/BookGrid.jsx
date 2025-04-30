@@ -440,39 +440,48 @@ const BookGrid = () => {
                 sortedBooks.map((book) => (
                   <div
                     key={book.id}
-                    className="bg-[#222831] p-4 border rounded-md shadow-md flex flex-col justify-between min-h-[350px] w-[250px]"
+                    className="bg-[#222831] p-4 border rounded-md shadow-md flex flex-col justify-between min-h-[350px] w-[250px] relative"
                   >
+                    <span className={`absolute top-3 right-3 px-3 py-2 rounded-full text-sm font-bold text-white ${book.listingType?.trim().toLowerCase() === "rent" ? 'bg-blue-500' : 'bg-green-500'} shadow-lg z-10 border-2 ${book.listingType?.trim().toLowerCase() === "rent" ? 'border-blue-500' : 'border-green-500'}`}>
+                      {book.listingType?.trim().toLowerCase() === "rent" ? 'RENT' : 'SELL'}
+                    </span>
                     <img
                       src={book.imageUrl}
                       alt={`Uploaded ${book.address}`}
                       className="max-w-full max-h-[300px] object-cover rounded-md mb-2"
                     />
                     <div className="mt-2">
-                      <p className="text-[#EEEEEE]">
-                        <strong>Book Name:</strong> {book.bookName}
-                      </p>
+                      <div className="mb-2">
+                        <p className="text-[#EEEEEE]">
+                          <strong>Book Name:</strong> {book.bookName}
+                        </p>
+                      </div>
                       <p className="text-[#EEEEEE]">
                         <strong>Price:</strong> Rs {book.price}
                       </p>
-                      <div className="flex items-center justify-between mt-4">
-                        <button
-                          onClick={() => toggleFavorite(book.id)}
-                          className="text-red-500"
-                        >
-                          <FaHeart
-                            className={`${
-                              favorites.has(book.id)
-                                ? "text-red-600"
-                                : "text-gray-400"
-                            }`}
-                          />
-                        </button>
-                        <button
-                          onClick={() => handleSeeDetails(book)}
-                          className="bg-[#FFD369] text-black px-3 py-1 rounded-md hover:bg-[#e0c258]"
-                        >
-                          See Details
-                        </button>
+                      <div className="flex flex-col mt-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <button
+                            onClick={() => toggleFavorite(book.id)}
+                            className="text-red-500"
+                          >
+                            <FaHeart
+                              className={`${
+                                favorites.has(book.id)
+                                  ? "text-red-600"
+                                  : "text-gray-400"
+                              }`}
+                            />
+                          </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleSeeDetails(book)}
+                              className="bg-[#FFD369] text-black px-3 py-1 rounded-md hover:bg-[#e0c258]"
+                            >
+                              See Details
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -654,6 +663,11 @@ const BookGrid = () => {
                     <h2 className="text-2xl font-bold mb-2 text-center">
                       {selectedBook.bookName}
                     </h2>
+                    <div className="flex items-center justify-center mb-2">
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold text-white ${selectedBook.listingType?.trim().toLowerCase() === "rent" ? 'bg-blue-600' : 'bg-green-600'} shadow-md`}>
+                        {selectedBook.listingType?.trim().toLowerCase() === "rent" ? 'RENT' : 'SELL'}
+                      </span>
+                    </div>
                     <p className="text-lg">
                       <strong>Price:</strong> Rs {selectedBook.price}
                     </p>

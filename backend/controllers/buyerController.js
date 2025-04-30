@@ -302,7 +302,7 @@ export const exploreBuyer = async (req, res) => {
     
         const user = rowsUser[0];  
     
-        const sqlBooks = 'SELECT id,userId,bookname, address, pincode, price, imageData FROM books';
+        const sqlBooks = 'SELECT id,userId,bookname, address, pincode, price, imageData, listingType FROM books';
         const [rowsBooks] = await db.query(sqlBooks);
     
         const books = rowsBooks.map(book => ({
@@ -313,6 +313,7 @@ export const exploreBuyer = async (req, res) => {
           userId:book.userId,
           bookName:book.bookname,
           imageUrl: book.imageData || null,
+          listingType: book.listingType,
         }));
     
         res.json({ user, books });
