@@ -1,5 +1,6 @@
 import { v2 as cloudinary } from "cloudinary";
 
+// Ensure 'process' is accessible by importing 'dotenv' and configuring it
 import dotenv from 'dotenv';
 
 dotenv.config();

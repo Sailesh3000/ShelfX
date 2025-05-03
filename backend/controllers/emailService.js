@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+// Ensure 'process' is accessible by importing 'dotenv' and configuring it
 import dotenv from 'dotenv';
 
 dotenv.config();

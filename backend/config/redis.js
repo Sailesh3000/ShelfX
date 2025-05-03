@@ -107,3 +107,8 @@ export const clearCache = async (pattern) => {
 };
 
 export default redisClient;
+
+// Ensure 'process' is accessible by importing 'dotenv' and configuring it
+import dotenv from 'dotenv';
+
+dotenv.config();

@@ -45,7 +45,7 @@ const SellerProfile = () => {
   // Check authentication on component mount
   useEffect(() => {
     checkAuthentication();
-  }, []);
+  }, [checkAuthentication]);
 
   // Function to check if user is authenticated
   const checkAuthentication = async () => {

@@ -39,7 +39,7 @@ const RequestList = ({ sellerId }) => {
     if (sellerId) {
       fetchRequests();
     }
-  }, [sellerId]);
+  }, [sellerId, dispatch]);
 
   const handleApproveRequest = async (bookId, sellerId, userId) => {
     try {
