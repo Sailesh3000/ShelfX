@@ -7,9 +7,9 @@ const dbConfig = {
   user: process.env.DB_USER || "root",
   password: process.env.DB_PASSWORD || "",
   database: process.env.DB_NAME || "ShelfX",
-  // Enable keep-alive
   enableKeepAlive: true,
-  keepAliveInitialDelay: 5000
+  keepAliveInitialDelay: 5000,
+  connectionLimit: 5 // Adjust this value to control max connections
 };
 
 // Create and export the database connection pool

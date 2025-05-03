@@ -112,3 +112,17 @@ export default redisClient;
 import dotenv from 'dotenv';
 
 dotenv.config();
+
+
+// Add shutdown listener to clear cache on application stop
+process.on('SIGINT', async () => {
+  console.log('SIGINT received: Clearing cache and shutting down.');
+  await clearCache();
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM received: Clearing cache and shutting down.');
+  await clearCache();
+  process.exit(0);
+});
