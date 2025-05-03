@@ -10,65 +10,33 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: shelfx_test
-        ports:
-          - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
-      
-      redis:
-        image: redis:alpine
-        ports:
-          - 6379:6379
-        options: --health-cmd="redis-cli ping" --health-interval=10s --health-timeout=5s --health-retries=3
-    
+
     strategy:
       matrix:
         node-version: [18.x]
-    
+
     steps:
     - uses: actions/checkout@v3
-    
+
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-    
+
     - name: Install dependencies
       run: npm ci
-    
+
     - name: Lint code
       run: npm run lint
-    
-    # Frontend build step removed as we're focusing only on backend
-    # - name: Build frontend
-    #   run: npm run build
-    
-    - name: Run tests
-      run: |
-        # Add test command when tests are available
-        # npm test
-        echo "No tests configured yet"
-      env:
-        NODE_ENV: test
-        DB_HOST: localhost
-        DB_USER: root
-        DB_PASSWORD: root
-        DB_NAME: shelfx_test
-        REDIS_HOST: localhost
-        REDIS_PORT: 6379
-    
-    # Build artifacts upload removed as we're focusing only on backend
-    # - name: Upload build artifacts
-    #   uses: actions/upload-artifact@v3
-    #   with:
-    #     name: build
-    #     path: dist/
+
+    # Redis service removed - using Upstash Redis instead
+    env:
+      REDIS_URL: ${{ secrets.REDIS_URL }}
+      MYSQL_HOST: ${{ secrets.MYSQL_HOST }}
+      MYSQL_USER: ${{ secrets.MYSQL_USER }}
+      MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+      MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
 
   docker:
     needs: build-and-test
