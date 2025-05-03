@@ -90,7 +90,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Apply cache middleware to API routes
 // Default cache duration is 1 hour (3600 seconds)
-app.use('/api', cacheMiddleware(3600));
+app.use(cacheMiddleware(3600));
 
 app.use(router);
 app.use(notFound); 
