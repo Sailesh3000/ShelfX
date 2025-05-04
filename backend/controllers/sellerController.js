@@ -256,7 +256,6 @@ export const uploadBook = async (req, res) => {
     }
 };
 
-
 export const deleteBook = async(req, res) => {
       const bookId = req.params.id;
       const userId = req.session.userId;
@@ -277,38 +276,6 @@ export const deleteBook = async(req, res) => {
         res.status(500).json({ message: "Server error" });
       }
     }
-
-
-    export const subscribePlan = async (req, res) => {
-        const { selectedPlan } = req.params;
-        const userId = req.session.userId;
-    
-        if (!userId) {
-            return res.status(401).send("User not authenticated");
-        }
-    
-        try {
-            const [rows] = await db.query(
-                "SELECT * FROM subscription WHERE userId = ?",
-                [userId]
-            );
-    
-            if (rows.length > 0) {
-                const updateSql = "UPDATE subscription SET plan = ? WHERE userId = ?";
-                await db.query(updateSql, [selectedPlan, userId]);
-                res.status(200).send("Subscription updated successfully");
-            } else {
-                const insertSql = "INSERT INTO subscription (userId, plan) VALUES (?, ?)";
-                await db.query(insertSql, [userId, selectedPlan]);
-                res.status(200).send("Subscription successful");
-            }
-        } catch (err) {
-            console.error("Error subscribing user:", err);
-            res.status(500).send("Server error");
-        }
-    };
-    
-
 
 export const editUserProfile = async (req, res) => {
     const userId = req.session.userId; 

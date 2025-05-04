@@ -1,5 +1,6 @@
 import db from "../db.js"; // Adjust this import to match your db file structure
 import { sendApprovalEmail } from "./emailService.js";
+
 export const getRequestsBySellerId = async (req, res) => {
     const { sellerId } = req.params;
 
@@ -29,6 +30,11 @@ export const getRequestsBySellerId = async (req, res) => {
         `;
 
         const [rows] = await db.query(sql, [sellerId]);
+        
+        if (!rows || rows.length === 0) {
+            return res.status(404).json({ message: 'No pending requests found' });
+        }
+        
         res.status(200).json(rows);
     } catch (err) {
         console.error("Error fetching requests:", err);
@@ -38,19 +44,22 @@ export const getRequestsBySellerId = async (req, res) => {
 
 export const approveRequest = async (req, res) => {
     const { bookId } = req.params;
-  const { sellerId, userId, bookName, buyerEmail } = req.body; 
+    const { sellerId, userId, bookName, buyerEmail } = req.body; 
 
-  try {
-    const sql = "UPDATE request SET status = ? WHERE bookId = ? AND sellerId = ? AND userId = ?";
-    await db.query(sql, ["APPROVED", bookId, sellerId, userId]);
+    try {
+        const sql = "UPDATE request SET status = ? WHERE bookId = ? AND sellerId = ? AND userId = ?";
+        const [result] = await db.query(sql, ["APPROVED", bookId, sellerId, userId]);
 
-    await sendApprovalEmail(buyerEmail,bookName);
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Request not found' });
+        }
 
-    res.json({ message: "Request approved successfully, email sent to buyer and seller!" });
-  } catch (error) {
-    console.error("Error approving request:", error);
-    res.status(500).json({ message: "Error approving request", error });
-  }
+        await sendApprovalEmail(buyerEmail, bookName);
+        res.json({ message: "Request approved successfully, email sent to buyer and seller!" });
+    } catch (error) {
+        console.error("Error approving request:", error);
+        res.status(500).json({ message: "Error approving request", error });
+    }
 };
 
 export const rejectRequest = async (req, res) => {
@@ -59,10 +68,25 @@ export const rejectRequest = async (req, res) => {
 
     try {
         const sql = "UPDATE request SET status = ? WHERE bookId = ? AND sellerId = ? AND userId = ?";
-        await db.query(sql, ["REJECTED", bookId, sellerId, userId]);
+        const [result] = await db.query(sql, ["REJECTED", bookId, sellerId, userId]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Request not found' });
+        }
+
         res.json({ message: "Request rejected successfully" });
     } catch (error) {
         console.error("Error rejecting request:", error);
         res.status(500).json({ message: "Error rejecting request", error });
+    }
+};
+
+export const getRequestCount = async (req, res) => {
+    try {
+        const [result] = await db.query('SELECT COUNT(*) as count FROM request');
+        res.json(result[0]);
+    } catch (error) {
+        console.error("Error getting request count:", error);
+        res.status(500).send("Server error");
     }
 };

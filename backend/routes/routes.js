@@ -6,7 +6,6 @@ import {
     getDetails,
     getSellers,
     getCountSellers,
-    subscribePlan, 
     getSellerDetailsById,
     updateSellerDetailsById,
     editUserProfile,
@@ -34,7 +33,8 @@ import {
 } from "../controllers/requestControllers.js"; 
 import { 
     getSubscriptions,
-    getSubscriptionByUserId
+    getSubscriptionByUserId,
+    subscribePlan
 } from "../controllers/subscriptionController.js"; 
 import { adminStatus } from "../controllers/adminController.js";
 import multer from 'multer'; // Middleware for handling file uploads

@@ -1,4 +1,10 @@
 import { createClient } from 'redis';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+// Check if we're in a test environment
+const isTestEnvironment = process.env.NODE_ENV === 'test';
 
 // Configure Redis client for Upstash Redis with TLS support
 const redisConfig = {
@@ -12,23 +18,25 @@ const redisConfig = {
   }
 };
 
-// Create Redis client
-const redisClient = createClient(redisConfig);
+// Create Redis client only if not in test environment
+const redisClient = isTestEnvironment ? null : createClient(redisConfig);
 
-// Handle Redis connection events
-redisClient.on('error', (err) => {
-  console.error('Redis connection error:', err);
-});
+// Handle Redis connection events only if not in test environment
+if (!isTestEnvironment && redisClient) {
+  redisClient.on('error', (err) => {
+    console.error('Redis connection error:', err);
+  });
 
-redisClient.on('connect', () => {
-  console.log('Connected to Redis server');
-});
+  redisClient.on('connect', () => {
+    console.log('Connected to Redis server');
+  });
+}
 
 // Cache middleware function with performance measurement
 export const cacheMiddleware = (duration = 3600) => {
   return async (req, res, next) => {
-    // Skip caching for non-GET requests
-    if (req.method !== 'GET') {
+    // Skip caching in test environment or for non-GET requests
+    if (isTestEnvironment || req.method !== 'GET') {
       return next();
     }
 
@@ -83,6 +91,8 @@ export const cacheMiddleware = (duration = 3600) => {
 
 // Helper function to clear cache
 export const clearCache = async (pattern) => {
+  if (isTestEnvironment) return;
+  
   try {
     if (!redisClient.isOpen) {
       await redisClient.connect();
@@ -108,21 +118,17 @@ export const clearCache = async (pattern) => {
 
 export default redisClient;
 
-// Ensure 'process' is accessible by importing 'dotenv' and configuring it
-import dotenv from 'dotenv';
-
-dotenv.config();
-
-
 // Add shutdown listener to clear cache on application stop
-process.on('SIGINT', async () => {
-  console.log('SIGINT received: Clearing cache and shutting down.');
-  await clearCache();
-  process.exit(0);
-});
+if (!isTestEnvironment) {
+  process.on('SIGINT', async () => {
+    console.log('SIGINT received: Clearing cache and shutting down.');
+    await clearCache();
+    process.exit(0);
+  });
 
-process.on('SIGTERM', async () => {
-  console.log('SIGTERM received: Clearing cache and shutting down.');
-  await clearCache();
-  process.exit(0);
-});
+  process.on('SIGTERM', async () => {
+    console.log('SIGTERM received: Clearing cache and shutting down.');
+    await clearCache();
+    process.exit(0);
+  });
+}
