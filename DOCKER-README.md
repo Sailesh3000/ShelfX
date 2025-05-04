@@ -22,8 +22,8 @@ This document provides instructions for running the ShelfX application using Doc
 
 3. **Access the application**
    - Frontend: http://localhost:80
-   - Backend API: http://localhost:5000
-   - Swagger API Documentation: http://localhost:5000/api-docs
+   - Backend API: https://shelfx-backend.onrender.com
+   - Swagger API Documentation: https://shelfx-backend.onrender.com/api-docs
 
 ## Environment Variables
 

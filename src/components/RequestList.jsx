@@ -13,7 +13,7 @@ const RequestList = ({ sellerId }) => {
   useEffect(() => {
     const fetchRequests = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/requests/${sellerId}`, {
+        const response = await axios.get(`https://shelfx-backend.onrender.com/requests/${sellerId}`, {
           withCredentials: true,
         });
         console.log(response.data);
@@ -44,7 +44,7 @@ const RequestList = ({ sellerId }) => {
   const handleApproveRequest = async (bookId, sellerId, userId) => {
     try {
       console.log(buyerDetails);
-      await axios.put(`http://localhost:5000/requests/${bookId}/approve`, { sellerId, userId, bookName: buyerDetails?.bookName , buyerEmail: buyerDetails?.email  },{ withCredentials: true });
+      await axios.put(`https://shelfx-backend.onrender.com/requests/${bookId}/approve`, { sellerId, userId, bookName: buyerDetails?.bookName , buyerEmail: buyerDetails?.email  },{ withCredentials: true });
         setRequests((prevRequests) =>
           prevRequests.map((req) =>
             req.bookId === bookId && req.id === sellerId ? { ...req, status: 'approved' } : req
@@ -57,7 +57,7 @@ const RequestList = ({ sellerId }) => {
 
   const handleRejectRequest = async (bookId, sellerId, userId) => {
     try {
-      await axios.put(`http://localhost:5000/requests/${bookId}/reject`, { sellerId, userId },{ withCredentials: true });
+      await axios.put(`https://shelfx-backend.onrender.com/requests/${bookId}/reject`, { sellerId, userId },{ withCredentials: true });
       setRequests((prevRequests) =>
         prevRequests.map((req) =>
           req.bookId === bookId && req.id === sellerId ? { ...req, status: 'rejected' } : req

@@ -15,6 +15,7 @@ import expressMySQL from "express-mysql-session";
 import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
 import redisClient, { cacheMiddleware } from "./config/redis.js";
+import db from "./db.config.js";
 
 const app = express();
 const port = 5000;
@@ -28,6 +29,9 @@ app.use(
     credentials: true,
   })
 );
+
+app.set('trust proxy', 1); 
+
 app.use(cookieParser());
 app.use(express.json());
 app.use(fileUpload({ useTempFiles: true, tempFileDir: "./tmp/" })); 
@@ -35,12 +39,9 @@ app.use(morgan("dev"));
 app.use(bodyParser.urlencoded({ extended: true }));
 
 const MySQLStore = expressMySQL(session);
-const sessionStore = new MySQLStore({
-  host: process.env.DB_HOST || "localhost",
-  user: process.env.DB_USER || "root",
-  password: process.env.DB_PASSWORD || "",
-  database: process.env.DB_NAME || "ShelfX"
-});
+
+// Enhanced session store configuration
+const sessionStore = new MySQLStore({}, db);
 
 app.use(
   session({
@@ -52,9 +53,9 @@ app.use(
     cookie: {
       maxAge: 24 * 60 * 60 * 1000,
       httpOnly: true,
-      secure: false, // Set to true in production with HTTPS
-      sameSite: 'lax' // Important for cross-origin requests
-    },
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+    }
   })
 );
 app.use(express.static(path.join(process.cwd(), "build")));
@@ -69,7 +70,7 @@ const swaggerDefinition = {
   },
   servers: [
     {
-      url: 'http://localhost:5000',
+      url: 'https://shelfx-backend.onrender.com',
       description: 'Development server',
     },
   ],
@@ -90,16 +91,10 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Apply cache middleware to API routes
 // Default cache duration is 1 hour (3600 seconds)
-app.use(cacheMiddleware(3600));
-
 app.use(router);
+app.use(cacheMiddleware(3600));
 app.use(notFound); 
 app.use(errorHandler);
-
-
-
-// Import database connection from config file
-import db from "./db.config.js";
 
 // Export the db connection for use in other files
 export default db;

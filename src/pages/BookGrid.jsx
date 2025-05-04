@@ -60,7 +60,7 @@ const BookGrid = () => {
   // Function to check if user is authenticated
   const checkAuthentication = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/check-auth', {
+      const response = await axios.get('https://shelfx-backend.onrender.com/check-auth', {
         withCredentials: true,
       });
       
@@ -88,7 +88,7 @@ const BookGrid = () => {
   };
   const fetchStatusRequests = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/status", {
+      const response = await axios.get("https://shelfx-backend.onrender.com/status", {
         withCredentials: true,
       });
       console.log(response);
@@ -137,7 +137,7 @@ const BookGrid = () => {
 
   const fetchUserDetails = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/explore", {
+      const response = await axios.get("https://shelfx-backend.onrender.com/explore", {
         withCredentials: true,
       });
       setUser(response.data.user);
@@ -165,7 +165,7 @@ const BookGrid = () => {
   const getUserDetails = async (userId) => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/sellerdetails/${userId}`,
+        `https://shelfx-backend.onrender.com/sellerdetails/${userId}`,
         {
           withCredentials: true,
         }
@@ -200,7 +200,7 @@ const BookGrid = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/Editbuyerprofile', {
+      const response = await fetch('https://shelfx-backend.onrender.com/Editbuyerprofile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -233,7 +233,7 @@ const BookGrid = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/Editbuyerprofile', {
+      const response = await fetch('https://shelfx-backend.onrender.com/Editbuyerprofile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -268,7 +268,7 @@ const BookGrid = () => {
   const handleLogout = async () => {
     try {
       const response = await axios.post(
-        "http://localhost:5000/logout",
+        "https://shelfx-backend.onrender.com/logout",
         {},
         {
           withCredentials: true,
@@ -332,7 +332,7 @@ const BookGrid = () => {
         sellerId : seller.userId
       };
 
-      const response = await axios.post("http://localhost:5000/request", requestData, {
+      const response = await axios.post("https://shelfx-backend.onrender.com/request", requestData, {
         withCredentials: true,
       });
 

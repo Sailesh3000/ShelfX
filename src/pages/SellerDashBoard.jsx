@@ -50,7 +50,7 @@ const SellerProfile = () => {
   // Function to check if user is authenticated
   const checkAuthentication = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/check-auth', {
+      const response = await axios.get('https://shelfx-backend.onrender.com/check-auth', {
         withCredentials: true,
       });
       
@@ -145,7 +145,7 @@ const SellerProfile = () => {
 
         console.log("Base64 Image:", base64Image.slice(0, 50)); // Debugging log (first 50 chars)
 
-        const uploadResponse = await axios.post('http://localhost:5000/uploadBook', {
+        const uploadResponse = await axios.post('https://shelfx-backend.onrender.com/uploadBook', {
             bookName,
             address,
             pincode,
@@ -179,7 +179,7 @@ const SellerProfile = () => {
 
   const fetchUserDetails = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/details', {
+      const response = await axios.get('https://shelfx-backend.onrender.com/details', {
         withCredentials: true,
       });
       setUser(response.data.user);
@@ -204,7 +204,7 @@ const SellerProfile = () => {
       
       // If 401 Unauthorized, redirect to login
       if (error.response && error.response.status === 401) {
-        navigate('/login', { state: { from: '/seller-profile' } });
+        navigate('/login-seller', { state: { from: '/seller-profile' } });
       }
     } finally {
       setLoading(false);
@@ -215,7 +215,7 @@ const SellerProfile = () => {
     if (!userId) return;
     
     try {
-      const response = await axios.get(`http://localhost:5000/subscription/${userId}`, {
+      const response = await axios.get(`https://shelfx-backend.onrender.com/subscription/${userId}`, {
         withCredentials: true,
       });
       setSubscription(response.data);
@@ -234,7 +234,7 @@ const SellerProfile = () => {
 
   const handleDelete = async (bookId) => {
     try {
-      const response = await axios.delete(`http://localhost:5000/deleteBook/${bookId}`, {
+      const response = await axios.delete(`https://shelfx-backend.onrender.com/deleteBook/${bookId}`, {
         withCredentials: true,
       });
 
@@ -273,7 +273,7 @@ const SellerProfile = () => {
     }
   
     try {
-      const response = await fetch('http://localhost:5000/Edituserprofile', {
+      const response = await fetch('https://shelfx-backend.onrender.com/Edituserprofile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -311,7 +311,7 @@ const SellerProfile = () => {
     }
   
     try {
-      const response = await fetch('http://localhost:5000/Edituserprofile', {
+      const response = await fetch('https://shelfx-backend.onrender.com/Edituserprofile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -335,16 +335,28 @@ const SellerProfile = () => {
   
   const handleLogout = async () => {
     try {
-      const response = await axios.post('http://localhost:5000/logout', {}, {
-        withCredentials: true,
-      });
+      const response = await axios.post(
+        "https://shelfx-backend.onrender.com/logout",
+        {},
+        {
+          withCredentials: true,
+        }
+      );
       if (response.status === 200) {
-        setSnackbar({ open: true, message: 'Logout successful', severity: 'success' });
-        navigate('/');
+        setSnackbar({
+          open: true,
+          message: "Logout successful",
+          severity: "success",
+        });
+        navigate("/");
       }
     } catch (error) {
-      console.error('Logout failed:', error);
-      setSnackbar({ open: true, message: 'Failed to logout. Please try again.', severity: 'error' });
+      console.error("Logout failed:", error);
+      setSnackbar({
+        open: true,
+        message: "Failed to logout. Please try again.",
+        severity: "error",
+      });
     }
   };
 
