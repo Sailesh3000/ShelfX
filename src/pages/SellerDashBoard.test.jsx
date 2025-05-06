@@ -94,11 +94,11 @@ describe('SellerProfile Component', () => {
     jest.clearAllMocks();
 
     axios.get.mockImplementation((url) => {
-      if (url === 'https://shelfx-backend.onrender.com/check-auth') {
+      if (url === 'http://localhost:5000/check-auth') {
         return Promise.resolve({ data: { authenticated: true } });
-      } else if (url === 'https://shelfx-backend.onrender.com/details') {
+      } else if (url === 'http://localhost:5000/details') {
         return Promise.resolve({ data: { user: mockUser, books: mockBooks } });
-      } else if (url.includes('https://shelfx-backend.onrender.com/subscription/')) {
+      } else if (url.includes('http://localhost:5000/subscription/')) {
         return Promise.resolve({ data: mockSubscription });
       } else if (url.includes('requests')) {
         return Promise.resolve({ data: [] });
@@ -165,7 +165,7 @@ describe('SellerProfile Component', () => {
 
   test('redirects to login if not authenticated', async () => {
     axios.get.mockImplementation((url) => {
-      if (url === 'https://shelfx-backend.onrender.com/check-auth') {
+      if (url === 'http://localhost:5000/check-auth') {
         return Promise.resolve({ data: { authenticated: false } });
       }
       return Promise.reject(new Error('Not found'));
@@ -182,7 +182,7 @@ describe('SellerProfile Component', () => {
 
   test('redirects to login if not authenticated', async () => {
     axios.get.mockImplementation((url) => {
-      if (url === 'https://shelfx-backend.onrender.com/check-auth') {
+      if (url === 'http://localhost:5000/check-auth') {
         return Promise.resolve({ data: { authenticated: false } });
       }
       return Promise.reject(new Error('Not found'));

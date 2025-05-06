@@ -38,6 +38,7 @@ import {
 } from "../controllers/subscriptionController.js"; 
 import { adminStatus } from "../controllers/adminController.js";
 import multer from 'multer'; // Middleware for handling file uploads
+import chatRoutes from './chat.routes.js';
 
 const upload = multer(); 
 const router = express.Router();
@@ -93,5 +94,8 @@ router.get("/check-auth", (req, res) => {
         res.json({ authenticated: false });
     }
 });
+
+// Chat routes
+router.use('/api/chat', chatRoutes);
 
 export default router;

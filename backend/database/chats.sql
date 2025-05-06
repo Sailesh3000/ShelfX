@@ -1,0 +1,21 @@
+CREATE TABLE IF NOT EXISTS chats (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    seller_id INT NOT NULL,
+    buyer_id INT NOT NULL,
+    book_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (seller_id) REFERENCES users(id),
+    FOREIGN KEY (buyer_id) REFERENCES users(id),
+    FOREIGN KEY (book_id) REFERENCES books(id)
+);
+
+CREATE TABLE IF NOT EXISTS messages (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    chat_id INT NOT NULL,
+    sender_id INT NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (chat_id) REFERENCES chats(id),
+    FOREIGN KEY (sender_id) REFERENCES users(id)
+); 

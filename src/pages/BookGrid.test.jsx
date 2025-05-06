@@ -71,13 +71,13 @@ describe('BookGrid Component', () => {
   beforeEach(() => {
     // Mock the authentication check
     axios.get.mockImplementation((url) => {
-      if (url === 'https://shelfx-backend.onrender.com/check-auth') {
+      if (url === 'http://localhost:5000/check-auth') {
         return Promise.resolve({ data: { authenticated: true } });
-      } else if (url === 'https://shelfx-backend.onrender.com/explore') {
+      } else if (url === 'http://localhost:5000/explore') {
         return Promise.resolve({ data: { user: mockUser, books: mockBooks } });
-      } else if (url === 'https://shelfx-backend.onrender.com/status') {
+      } else if (url === 'http://localhost:5000/status') {
         return Promise.resolve({ data: { requests: mockRequests } });
-      } else if (url.includes('https://shelfx-backend.onrender.com/sellerdetails/')) {
+      } else if (url.includes('http://localhost:5000/sellerdetails/')) {
         return Promise.resolve({ data: { user: mockSeller } });
       }
       return Promise.reject(new Error('Not found'));
@@ -344,7 +344,7 @@ describe('BookGrid Component', () => {
     // Verify axios was called with the correct URL
     await waitFor(() => {
       expect(axios.post).toHaveBeenCalledWith(
-        'https://shelfx-backend.onrender.com/logout',
+        'http://localhost:5000/logout',
         {},
         { withCredentials: true }
       );

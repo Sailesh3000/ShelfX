@@ -39,7 +39,7 @@ const LoginSeller = ({ onToggle }) => {
     }
 
     try {
-      const response = await fetch('https://shelfx-backend.onrender.com/LoginSeller', {
+      const response = await fetch('http://localhost:5000/LoginSeller', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

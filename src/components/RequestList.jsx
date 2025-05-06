@@ -11,40 +11,49 @@ const RequestList = ({ sellerId }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchRequests = async () => {
+      if (!sellerId) return;
+      
       try {
-        const response = await axios.get(`https://shelfx-backend.onrender.com/requests/${sellerId}`, {
+        const response = await axios.get(`http://localhost:5000/requests/${sellerId}`, {
           withCredentials: true,
         });
-        console.log(response.data);
-        setRequests(response.data);
+        
+        if (isMounted) {
+          setRequests(response.data);
 
-        // Only dispatch buyer details if there is data available
-        if (response.data && response.data.length > 0) {
-          dispatch(setBuyerDetails({
-            email: response.data[0].email,
-            bookName: response.data[0].bookName,
-            pincode: response.data[0].pincode,
-            state: response.data[0].state,
-          }));
+          // Only dispatch buyer details if there is data available
+          if (response.data && response.data.length > 0) {
+            dispatch(setBuyerDetails({
+              email: response.data[0].email,
+              bookName: response.data[0].bookName,
+              pincode: response.data[0].pincode,
+              state: response.data[0].state,
+            }));
+          }
         }
-
       } catch (error) {
         console.error('Error fetching requests:', error);
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
-    if (sellerId) {
-      fetchRequests();
-    }
+    fetchRequests();
+
+    return () => {
+      isMounted = false;
+    };
   }, [sellerId, dispatch]);
 
   const handleApproveRequest = async (bookId, sellerId, userId) => {
     try {
       console.log(buyerDetails);
-      await axios.put(`https://shelfx-backend.onrender.com/requests/${bookId}/approve`, { sellerId, userId, bookName: buyerDetails?.bookName , buyerEmail: buyerDetails?.email  },{ withCredentials: true });
+      await axios.put(`http://localhost:5000/requests/${bookId}/approve`, { sellerId, userId, bookName: buyerDetails?.bookName , buyerEmail: buyerDetails?.email  },{ withCredentials: true });
         setRequests((prevRequests) =>
           prevRequests.map((req) =>
             req.bookId === bookId && req.id === sellerId ? { ...req, status: 'approved' } : req
@@ -57,7 +66,7 @@ const RequestList = ({ sellerId }) => {
 
   const handleRejectRequest = async (bookId, sellerId, userId) => {
     try {
-      await axios.put(`https://shelfx-backend.onrender.com/requests/${bookId}/reject`, { sellerId, userId },{ withCredentials: true });
+      await axios.put(`http://localhost:5000/requests/${bookId}/reject`, { sellerId, userId },{ withCredentials: true });
       setRequests((prevRequests) =>
         prevRequests.map((req) =>
           req.bookId === bookId && req.id === sellerId ? { ...req, status: 'rejected' } : req

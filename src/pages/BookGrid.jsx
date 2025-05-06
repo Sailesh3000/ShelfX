@@ -14,6 +14,7 @@ import {
 } from "@mui/material";
 import axios from "axios";
 import bcrypt from 'bcryptjs';
+import Chat from '../components/Chat';
 
 
 const BookGrid = () => {
@@ -52,32 +53,32 @@ const BookGrid = () => {
     newPassword: '',
     confirmPassword: '',
   });
+  const [showChat, setShowChat] = useState(false);
 
+  // Initial authentication check
   useEffect(() => {
-    checkAuthentication();
-  });
-  
-  // Function to check if user is authenticated
-  const checkAuthentication = async () => {
-    try {
-      const response = await axios.get('https://shelfx-backend.onrender.com/check-auth', {
-        withCredentials: true,
-      });
-      
-      if (response.data.authenticated) {
-        setAuthenticated(true);
-        fetchUserDetails();
-      } else {
-        // Redirect to login page if not authenticated
+    const checkAuth = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/check-auth', {
+          withCredentials: true,
+        });
+        
+        if (response.data.authenticated) {
+          setAuthenticated(true);
+          await fetchUserDetails();
+        } else {
+          navigate('/login-Buyer', { state: { from: '/BookGrid' } });
+        }
+      } catch (error) {
+        console.error("Authentication check failed:", error);
         navigate('/login-Buyer', { state: { from: '/BookGrid' } });
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Authentication check failed:", error);
-      // Redirect to login page on error
-      navigate('/login-Buyer', { state: { from: '/BookGrid' } });
-    }
-  };
+    };
 
+    checkAuth();
+  }, []); // Empty dependency array means this runs once on mount
 
   const handleChange2 = (e) => {
     const { name, value } = e.target;
@@ -88,7 +89,7 @@ const BookGrid = () => {
   };
   const fetchStatusRequests = async () => {
     try {
-      const response = await axios.get("https://shelfx-backend.onrender.com/status", {
+      const response = await axios.get("http://localhost:5000/status", {
         withCredentials: true,
       });
       console.log(response);
@@ -137,7 +138,7 @@ const BookGrid = () => {
 
   const fetchUserDetails = async () => {
     try {
-      const response = await axios.get("https://shelfx-backend.onrender.com/explore", {
+      const response = await axios.get("http://localhost:5000/explore", {
         withCredentials: true,
       });
       setUser(response.data.user);
@@ -165,7 +166,7 @@ const BookGrid = () => {
   const getUserDetails = async (userId) => {
     try {
       const response = await axios.get(
-        `https://shelfx-backend.onrender.com/sellerdetails/${userId}`,
+        `http://localhost:5000/sellerdetails/${userId}`,
         {
           withCredentials: true,
         }
@@ -200,7 +201,7 @@ const BookGrid = () => {
     }
 
     try {
-      const response = await fetch('https://shelfx-backend.onrender.com/Editbuyerprofile', {
+      const response = await fetch('http://localhost:5000/Editbuyerprofile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -233,7 +234,7 @@ const BookGrid = () => {
     }
 
     try {
-      const response = await fetch('https://shelfx-backend.onrender.com/Editbuyerprofile', {
+      const response = await fetch('http://localhost:5000/Editbuyerprofile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -268,7 +269,7 @@ const BookGrid = () => {
   const handleLogout = async () => {
     try {
       const response = await axios.post(
-        "https://shelfx-backend.onrender.com/logout",
+        "http://localhost:5000/logout",
         {},
         {
           withCredentials: true,
@@ -307,7 +308,7 @@ const BookGrid = () => {
   const handleSeeDetails = (book) => {
     setSelectedBook(book);
     setIsModalOpen(true);
-    setCurrentBookId(book.id);
+    setShowChat(false);
     getUserDetails(book.userId);
     document.body.style.overflow = "hidden";
   };
@@ -315,6 +316,7 @@ const BookGrid = () => {
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedBook(null);
+    setShowChat(false);
     document.body.style.overflow = "auto";
   };
 
@@ -332,7 +334,7 @@ const BookGrid = () => {
         sellerId : seller.userId
       };
 
-      const response = await axios.post("https://shelfx-backend.onrender.com/request", requestData, {
+      const response = await axios.post("http://localhost:5000/request", requestData, {
         withCredentials: true,
       });
 
@@ -374,43 +376,98 @@ const BookGrid = () => {
       })
     : filteredBooks;
 
-  return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      {/* Navigation Bar */}
-      <nav className="bg-[#393E46] text-white px-8 py-4 flex justify-between items-center">
-        <div className="text-2xl font-bold">ShelfX</div>
-        <div className="flex items-center justify-center gap-4 text-xl">
+  const renderBookDetails = () => {
+    if (!selectedBook) return null;
+
+    return (
+      <div className="p-6">
+        <div className="flex justify-between items-start mb-4">
+          <div>
+            <h2 className="text-2xl font-bold mb-2">{selectedBook.bookName}</h2>
+            <p className="text-gray-600">Price: ${selectedBook.price}</p>
+            <p className="text-gray-600">Location: {selectedBook.address}</p>
+            <p className="text-gray-600">Pincode: {selectedBook.pincode}</p>
+          </div>
           <button
-            className={`hover:text-[#FFD369] ${
-              activeTab === "myBooks" ? "text-[#FFD369]" : ""
-            } ml-36`}
-            onClick={() => setActiveTab("myBooks")}
+            onClick={() => setShowChat(!showChat)}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
-            Books
-          </button>
-          <button
-            className={`hover:text-[#FFD369] ${
-              activeTab === "favourites" ? "text-[#FFD369]" : ""
-            }`}
-            onClick={() => setActiveTab("favourites")}
-          >
-            Requested
+            {showChat ? 'Hide Chat' : 'Show Chat'}
           </button>
         </div>
-        <div className="flex items-center space-x-4">
-          <FaUserCircle className="w-8 h-8 text-white" />
-          <h3 className="text-xl tracking-wide">
-            {user ? user.username : "Guest"}
-          </h3>
-          {user && (
+
+        {showChat && (
+          <div className="mt-4">
+            <Chat
+              bookId={selectedBook.id}
+              sellerId={selectedBook.sellerId}
+              buyerId={user?.id}
+              userType="buyer"
+            />
+          </div>
+        )}
+
+        <div className="mt-4 flex justify-end space-x-2">
+          <button
+            onClick={closeModal}
+            className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+          >
+            Close
+          </button>
+          <button
+            onClick={() => handleBuyRequest(selectedBook)}
+            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+          >
+            Buy
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-[#EEEEEE]">
+      {/* Navigation Bar */}
+      <nav className="bg-[#393E46] text-white px-8 py-4 flex justify-between items-center shadow-lg">
+        <div className="text-2xl font-bold text-[#FFD369]">ShelfX</div>
+        <div className="flex items-center space-x-8">
+          <div className="flex space-x-4">
+            <button
+              onClick={() => setActiveTab("myBooks")}
+              className={`px-4 py-2 rounded-lg transition-all duration-200 ${
+                activeTab === "myBooks"
+                  ? "bg-[#FFD369] text-gray-900 font-semibold"
+                  : "hover:bg-[#4a4f57] text-white"
+              }`}
+            >
+              Browse Books
+            </button>
+            <button
+              onClick={() => setActiveTab("requests")}
+              className={`px-4 py-2 rounded-lg transition-all duration-200 ${
+                activeTab === "requests"
+                  ? "bg-[#FFD369] text-gray-900 font-semibold"
+                  : "hover:bg-[#4a4f57] text-white"
+              }`}
+            >
+              My Requests
+            </button>
+          </div>
+          <div className="flex items-center space-x-4 border-l border-gray-600 pl-6">
+            <FaUserCircle className="w-8 h-8 text-[#FFD369]" />
+            {user ? (
+              <h3 className="text-lg font-medium">{user.username}</h3>
+            ) : (
+              <h3 className="text-lg font-medium">Guest</h3>
+            )}
             <button
               type="button"
               onClick={handleLogout}
-              className="text-white font-medium rounded-lg text-xl px-2 py-1 text-center hover:text-[#FFD369]"
+              className="px-4 py-2 rounded-lg bg-[#FFD369] text-gray-900 font-medium hover:bg-[#e6bd5f] transition-colors duration-200"
             >
               Logout
             </button>
-          )}
+          </div>
         </div>
       </nav>
 
@@ -491,46 +548,131 @@ const BookGrid = () => {
               )}
             </div>
           </>
-        ) : (
-            <div className="p-8">
-              <h1 className="text-2xl font-bold mb-6">History</h1>
-              <div className='flex'>
-          <div className="bg-[#393E46] text-white flex flex-col items-center justify-center w-52 h-36 rounded-md shadow-md mr-[20px]">
-              <button 
-                className="text-[#FFD369] font-semibold" 
-                onClick={() => setOpenpassDialog(true)}
-              >
-                Change your password 
-              </button>
+        ) : activeTab === "requests" ? (
+          <div className="p-8">
+            <h1 className="text-2xl font-bold mb-6 text-[#222831]">My Requests</h1>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {req.length > 0 ? (
+                req.map((request) => (
+                  <Card
+                    key={request.bookId}
+                    name={request.bookName}
+                    amount={request.bookPrice}
+                    date={new Date(request.date).toLocaleDateString()}
+                    status={request.status}
+                  />
+                ))
+              ) : (
+                <p className="text-center text-gray-500">No requests found</p>
+              )}
             </div>
-            <div className="bg-[#393E46] text-white flex flex-col items-center justify-center w-52 h-36 rounded-md shadow-md">
-              <button 
-                className="text-[#FFD369] font-semibold" 
-                onClick={() => setOpennameDialog(true)}
-              >
-                Change your name
-              </button>
-            </div> </div>
-            <br />
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-black">
-                {req.length > 0 ? (
-                  req.map((request) => (
-                    <Card
-                      key={request.bookId} 
-                      name={request.bookName}
-                      amount={request.bookPrice}
-                      date={new Date(request.date).toLocaleDateString()} // Format the date
-                      status={request.status}
+          </div>
+        ) : null}
+      </div>
+
+      {/* Book Details Modal */}
+      {isModalOpen && selectedBook && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+          onClick={closeModal}
+        >
+          <div
+            className="bg-[#222831] rounded-lg p-6 w-1/3 max-w-xl h-auto max-h-[90%] overflow-y-auto relative md:w-2/3 sm:w-full"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+          >
+            {/* Close Button */}
+            <button
+              onClick={closeModal}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white focus:outline-none"
+            >
+              <FaTimes className="w-6 h-6" />
+            </button>
+
+            {/* Content Section */}
+            <div className="flex flex-col items-center text-white">
+              {/* Book Image */}
+              <img
+                src={selectedBook.imageUrl}
+                alt={selectedBook.bookName}
+                className="w-full max-w-[250px] object-cover rounded-lg shadow-md mb-4"
+              />
+
+              {/* Book Info */}
+              <h2 className="text-2xl font-bold mb-2 text-center">
+                {selectedBook.bookName}
+              </h2>
+              <div className="flex items-center justify-center mb-2">
+                <span className={`px-3 py-1 rounded-full text-xs font-semibold text-white ${selectedBook.listingType?.trim().toLowerCase() === "rent" ? 'bg-blue-600' : 'bg-green-600'} shadow-md`}>
+                  {selectedBook.listingType?.trim().toLowerCase() === "rent" ? 'RENT' : 'SELL'}
+                </span>
+              </div>
+              <p className="text-lg">
+                <strong>Price:</strong> Rs {selectedBook.price}
+              </p>
+              <p className="text-lg mb-4">
+                <strong>Pincode:</strong> {selectedBook.pincode}
+              </p>
+
+              {seller && (
+                <div className="w-full text-left bg-[#393e46] rounded-lg p-4 mb-4 shadow-md">
+                  <h3 className="text-xl font-semibold mb-2">
+                    Seller Details
+                  </h3>
+                  <p className="text-lg">
+                    <strong>Seller:</strong> {seller.username}
+                  </p>
+                  <p className="text-lg">
+                    <strong>Contact:</strong> {seller.email}  
+                  </p>
+                  <p className="text-lg">
+                    <strong>Pincode:</strong> {selectedBook.pincode}
+                  </p>
+                </div>
+              )}
+
+              {/* Chat Section */}
+              <div className="w-full mt-4">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-xl font-semibold">Chat with Seller</h3>
+                  <button
+                    onClick={() => setShowChat(!showChat)}
+                    className="px-4 py-2 bg-[#FFD369] text-black rounded hover:bg-[#e6bd5f] transition-colors"
+                  >
+                    {showChat ? 'Hide Chat' : 'Show Chat'}
+                  </button>
+                </div>
+                {showChat && (
+                  <div className="bg-[#393e46] rounded-lg p-4">
+                    <Chat
+                      bookId={selectedBook.id}
+                      sellerId={selectedBook.sellerId}
+                      buyerId={user?.id}
+                      userType="buyer"
                     />
-                  ))
-                ) : (
-                  <p className="text-center text-gray-500">No requests found</p>
+                  </div>
                 )}
               </div>
+
+              <div className="mt-4 flex justify-end space-x-2">
+                <button
+                  onClick={closeModal}
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => handleBuyRequest(selectedBook)}
+                  className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                >
+                  Buy
+                </button>
+              </div>
             </div>
-        )
-      }
-      </div>
+          </div>
+        </div>
+      )}
       <Dialog open={isBuyDialogOpen} onClose={() => setIsBuyDialogOpen(false)}>
         <DialogTitle>Confirm Buy Request</DialogTitle>
         <DialogContent>
@@ -631,77 +773,6 @@ const BookGrid = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
-      {isModalOpen && selectedBook && (
-              <div
-                className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-                onClick={closeModal}
-              >
-                <div
-                  className="bg-[#222831] rounded-lg p-6 w-1/3 max-w-xl h-auto max-h-[90%] overflow-y-auto relative md:w-2/3 sm:w-full"
-                  onClick={(e) => e.stopPropagation()}
-                  role="dialog"
-                  aria-modal="true"
-                >
-                  {/* Close Button */}
-                  <button
-                    onClick={closeModal}
-                    className="absolute top-4 right-4 text-gray-400 hover:text-white focus:outline-none"
-                  >
-                    <FaTimes className="w-6 h-6" />
-                  </button>
-
-                  {/* Content Section */}
-                  <div className="flex flex-col items-center text-white">
-                    {/* Book Image */}
-                    <img
-                      src={selectedBook.imageUrl}
-                      alt={selectedBook.bookName}
-                      className="w-full max-w-[250px] object-cover rounded-lg shadow-md mb-4"
-                    />
-
-                    {/* Book Info */}
-                    <h2 className="text-2xl font-bold mb-2 text-center">
-                      {selectedBook.bookName}
-                    </h2>
-                    <div className="flex items-center justify-center mb-2">
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold text-white ${selectedBook.listingType?.trim().toLowerCase() === "rent" ? 'bg-blue-600' : 'bg-green-600'} shadow-md`}>
-                        {selectedBook.listingType?.trim().toLowerCase() === "rent" ? 'RENT' : 'SELL'}
-                      </span>
-                    </div>
-                    <p className="text-lg">
-                      <strong>Price:</strong> Rs {selectedBook.price}
-                    </p>
-                    <p className="text-lg mb-4">
-                      <strong>Pincode:</strong> {selectedBook.pincode}
-                    </p>
-
-                    {seller && (
-                      <div className="w-full text-left bg-[#393e46] rounded-lg p-4 mb-4 shadow-md">
-                        <h3 className="text-xl font-semibold mb-2">
-                          Seller Details
-                        </h3>
-                        <p className="text-lg">
-                          <strong>Seller:</strong> {seller.username}
-                        </p>
-                        <p className="text-lg">
-                          <strong>Contact:</strong> {seller.email}  
-                        </p>
-                        <p className="text-lg">
-                          <strong>Pincode:</strong> {selectedBook.pincode}
-                        </p>
-                      </div>
-                    )}
-
-                    <button
-                      onClick={() => handleBuyRequest(selectedBook)}
-                      className="bg-[#FFD369] text-black text-lg font-medium px-6 py-2 rounded-lg hover:bg-[#e0c258] transition duration-300 ease-in-out"
-                    >
-                      Buy Now
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
     </div>
   );
 };

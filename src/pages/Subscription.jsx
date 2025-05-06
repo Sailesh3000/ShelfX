@@ -12,7 +12,7 @@ const Subscription = () => {
       return;
     }
     try {
-      await axios.post(`https://shelfx-backend.onrender.com/subscribe/${selectedPlan}`,{},{withCredentials: true});
+      await axios.post(`http://localhost:5000/subscribe/${selectedPlan}`,{},{withCredentials: true});
       alert('Subscription successful!');
     } catch (error) {
       console.error("Error subscribing:", error);

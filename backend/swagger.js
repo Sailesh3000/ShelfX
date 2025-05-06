@@ -99,7 +99,7 @@
  *         address: "123 Main St"
  *         pincode: "123456"
  *         price: "10.99"
- *         imageUrl: "https://res.cloudinary.com/example/image/upload/book.jpg"
+ *         imageUrl: "http://res.cloudinary.com/example/image/upload/book.jpg"
  *
  *     Request:
  *       type: object

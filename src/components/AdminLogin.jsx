@@ -14,7 +14,7 @@ const AdminLogin = () => {
 
     const handleLogin = async () => {
         try {
-            const response = await axios.post('https://shelfx-backend.onrender.com/adminStatus', formData);
+            const response = await axios.post('http://localhost:5000/adminStatus', formData);
             
             if (response.status === 200) {
                 

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, CircularProgress, Snackbar, Alert } from '@mui/material';
 import RequestList from '../components/RequestList';
+import Chat from '../components/Chat';
 import bcrypt from 'bcryptjs';
 
 const SellerProfile = () => {
@@ -39,18 +40,19 @@ const SellerProfile = () => {
     newpassword:'',
     confirmPassword: '',
   });
+  const [selectedChat, setSelectedChat] = useState(null);
 
   const navigate = useNavigate(); 
 
   // Check authentication on component mount
   useEffect(() => {
     checkAuthentication();
-  });
+  }, []);
 
   // Function to check if user is authenticated
   const checkAuthentication = async () => {
     try {
-      const response = await axios.get('https://shelfx-backend.onrender.com/check-auth', {
+      const response = await axios.get('http://localhost:5000/check-auth', {
         withCredentials: true,
       });
       
@@ -145,7 +147,7 @@ const SellerProfile = () => {
 
         console.log("Base64 Image:", base64Image.slice(0, 50)); // Debugging log (first 50 chars)
 
-        const uploadResponse = await axios.post('https://shelfx-backend.onrender.com/uploadBook', {
+        const uploadResponse = await axios.post('http://localhost:5000/uploadBook', {
             bookName,
             address,
             pincode,
@@ -179,7 +181,7 @@ const SellerProfile = () => {
 
   const fetchUserDetails = async () => {
     try {
-      const response = await axios.get('https://shelfx-backend.onrender.com/details', {
+      const response = await axios.get('http://localhost:5000/details', {
         withCredentials: true,
       });
       setUser(response.data.user);
@@ -215,7 +217,7 @@ const SellerProfile = () => {
     if (!userId) return;
     
     try {
-      const response = await axios.get(`https://shelfx-backend.onrender.com/subscription/${userId}`, {
+      const response = await axios.get(`http://localhost:5000/subscription/${userId}`, {
         withCredentials: true,
       });
       setSubscription(response.data);
@@ -224,17 +226,33 @@ const SellerProfile = () => {
     }
   };
 
+  // Add cleanup for image preview
   useEffect(() => {
     return () => {
-      if (selectedImage) {
+      if (imagePreview) {
         URL.revokeObjectURL(imagePreview);
       }
     };
-  });
+  }, [imagePreview]);
+
+  // Add cleanup for chat polling
+  useEffect(() => {
+    let pollInterval;
+    if (selectedChat) {
+      pollInterval = setInterval(() => {
+        // Your chat polling logic here
+      }, 3000);
+    }
+    return () => {
+      if (pollInterval) {
+        clearInterval(pollInterval);
+      }
+    };
+  }, [selectedChat]);
 
   const handleDelete = async (bookId) => {
     try {
-      const response = await axios.delete(`https://shelfx-backend.onrender.com/deleteBook/${bookId}`, {
+      const response = await axios.delete(`http://localhost:5000/deleteBook/${bookId}`, {
         withCredentials: true,
       });
 
@@ -273,7 +291,7 @@ const SellerProfile = () => {
     }
   
     try {
-      const response = await fetch('https://shelfx-backend.onrender.com/Edituserprofile', {
+      const response = await fetch('http://localhost:5000/Edituserprofile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -311,7 +329,7 @@ const SellerProfile = () => {
     }
   
     try {
-      const response = await fetch('https://shelfx-backend.onrender.com/Edituserprofile', {
+      const response = await fetch('http://localhost:5000/Edituserprofile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -336,7 +354,7 @@ const SellerProfile = () => {
   const handleLogout = async () => {
     try {
       const response = await axios.post(
-        "https://shelfx-backend.onrender.com/logout",
+        "http://localhost:5000/logout",
         {},
         {
           withCredentials: true,
@@ -360,6 +378,29 @@ const SellerProfile = () => {
     }
   };
 
+  const renderChatList = () => {
+    return (
+      <div className="space-y-4">
+        {uploadedImages.map((book) => (
+          <div key={book.id} className="bg-white p-4 rounded-lg shadow">
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="text-lg font-semibold">{book.bookName}</h3>
+                <p className="text-gray-600">Price: ${book.price}</p>
+              </div>
+              <button
+                onClick={() => setSelectedChat({ bookId: book.id, buyerId: book.buyerId })}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              >
+                View Chat
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#EEEEEE]">
@@ -371,32 +412,46 @@ const SellerProfile = () => {
   return (
     <div className="min-h-screen bg-[#EEEEEE]">
       {/* Navigation Bar */}
-      <nav className="bg-[#393E46] text-white px-8 py-4 flex justify-between items-center">
-        <div className="text-2xl font-bold">ShelfX</div>
-        <div className="flex items-center space-x-4">
-          <button 
-            onClick={() => handleTabClick('home')} 
-            className={`hover:text-[#FFD369] ${activeTab === 'home' ? 'text-[#FFD369]' : ''}`}
-          >
-            Home
-          </button>
-          <button 
-            onClick={() => handleTabClick('myBooks')} 
-            className={`hover:text-[#FFD369] ${activeTab === 'myBooks' ? 'text-[#FFD369]' : ''}`}
-          >
-            My Books
-          </button>
-        </div>
-        <div className="flex items-center space-x-4">
-          <FaUserCircle className="w-8 h-8 text-white" />
-          {user ? <h3 className='text-xl tracking-wide'>{user.username}</h3> : <h3 className='text-xl tracking-wide'>Guest</h3>}
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="text-white font-medium rounded-lg text-sm px-2 py-1 text-center hover:text-[#FFD369]"
-          >
-            Logout
-          </button>
+      <nav className="bg-[#393E46] text-white px-8 py-4 flex justify-between items-center shadow-lg">
+        <div className="text-2xl font-bold text-[#FFD369]">ShelfX</div>
+        <div className="flex items-center space-x-8">
+          <div className="flex space-x-4">
+            <button
+              onClick={() => handleTabClick('myBooks')}
+              className={`px-4 py-2 rounded-lg transition-all duration-200 ${
+                activeTab === 'myBooks'
+                  ? 'bg-[#FFD369] text-gray-900 font-semibold'
+                  : 'hover:bg-[#4a4f57] text-white'
+              }`}
+            >
+              My Books
+            </button>
+            <button
+              onClick={() => handleTabClick('chats')}
+              className={`px-4 py-2 rounded-lg transition-all duration-200 ${
+                activeTab === 'chats'
+                  ? 'bg-[#FFD369] text-gray-900 font-semibold'
+                  : 'hover:bg-[#4a4f57] text-white'
+              }`}
+            >
+              Chats
+            </button>
+          </div>
+          <div className="flex items-center space-x-4 border-l border-gray-600 pl-6">
+            <FaUserCircle className="w-8 h-8 text-[#FFD369]" />
+            {user ? (
+              <h3 className='text-lg font-medium'>{user.username}</h3>
+            ) : (
+              <h3 className='text-lg font-medium'>Guest</h3>
+            )}
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="px-4 py-2 rounded-lg bg-[#FFD369] text-gray-900 font-medium hover:bg-[#e6bd5f] transition-colors duration-200"
+            >
+              Logout
+            </button>
+          </div>
         </div>
       </nav>
 
@@ -670,7 +725,98 @@ const SellerProfile = () => {
         </Alert>
       </Snackbar>
       
-      {user && <RequestList sellerId={user.id} />}
+      {activeTab === 'chats' && (
+        <div className="p-8">
+          <h1 className="text-2xl font-bold mb-6 text-[#222831]">My Conversations</h1>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            {/* Chat List Sidebar */}
+            <div className="md:col-span-1">
+              <div className="bg-[#222831] rounded-lg shadow-lg p-4">
+                <h2 className="text-lg font-semibold mb-4 text-[#FFD369]">Active Chats</h2>
+                <div className="space-y-3">
+                  {uploadedImages.filter(book => book.hasChat).length > 0 ? (
+                    uploadedImages
+                      .filter(book => book.hasChat)
+                      .map((book) => (
+                        <div
+                          key={book.id}
+                          className={`p-3 rounded-lg cursor-pointer transition-all duration-200 ${
+                            selectedChat?.bookId === book.id
+                              ? 'bg-[#FFD369] text-[#222831]'
+                              : 'bg-[#393E46] text-white hover:bg-[#4a4f57]'
+                          }`}
+                          onClick={() => setSelectedChat({ bookId: book.id, buyerId: book.buyerId })}
+                        >
+                          <div className="flex items-center justify-between">
+                            <h3 className="font-medium truncate">{book.bookName}</h3>
+                            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                              book.listingType?.trim().toLowerCase() === "rent" 
+                                ? 'bg-blue-500 text-white' 
+                                : 'bg-green-500 text-white'
+                            }`}>
+                              {book.listingType?.trim().toLowerCase() === "rent" ? 'RENT' : 'SELL'}
+                            </span>
+                          </div>
+                          <p className="text-sm mt-1 opacity-80">Price: Rs {book.price}</p>
+                          <p className="text-sm mt-1 text-[#FFD369]">Chat with: {book.buyerName}</p>
+                        </div>
+                      ))
+                  ) : (
+                    <div className="text-center py-8">
+                      <div className="text-[#FFD369] text-4xl mb-3">
+                        <FaUserCircle />
+                      </div>
+                      <p className="text-gray-400">No active conversations yet</p>
+                      <p className="text-sm text-gray-500 mt-2">Chats will appear here when buyers message you</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Chat Window */}
+            <div className="md:col-span-3">
+              {selectedChat ? (
+                <div className="bg-[#222831] rounded-lg shadow-lg p-4 h-[600px] flex flex-col">
+                  <div className="flex items-center justify-between mb-4 pb-4 border-b border-[#393E46]">
+                    <div>
+                      <h2 className="text-xl font-semibold text-[#FFD369]">
+                        {uploadedImages.find(book => book.id === selectedChat.bookId)?.bookName}
+                      </h2>
+                      <p className="text-sm text-gray-400">
+                        {uploadedImages.find(book => book.id === selectedChat.bookId)?.listingType === "rent" ? "Rental" : "Sale"} Conversation
+                      </p>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="px-3 py-1 rounded-full text-sm font-semibold bg-[#393E46] text-[#FFD369]">
+                        Active
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex-1 overflow-hidden">
+                    <Chat
+                      bookId={selectedChat.bookId}
+                      sellerId={user?.id}
+                      buyerId={selectedChat.buyerId}
+                      userType="seller"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-[#222831] rounded-lg shadow-lg p-8 flex items-center justify-center h-[600px]">
+                  <div className="text-center">
+                    <div className="text-[#FFD369] text-6xl mb-4">
+                      <FaUserCircle />
+                    </div>
+                    <h3 className="text-xl font-semibold text-[#FFD369] mb-2">No Chat Selected</h3>
+                    <p className="text-gray-400">Select a conversation from the list to start chatting</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

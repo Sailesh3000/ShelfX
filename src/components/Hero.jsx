@@ -90,7 +90,7 @@ const Hero = () => {
                 className="flex justify-center items-center"
               >
                 <dotlottie-player 
-                  src="https://lottie.host/4568a68e-712e-46e9-9438-c0ad81ea8533/7C5WvzpoSV.json" 
+                  src="http://lottie.host/4568a68e-712e-46e9-9438-c0ad81ea8533/7C5WvzpoSV.json" 
                   background="transparent" 
                   speed="1" 
                   style={{width: 100, height: 100}} 

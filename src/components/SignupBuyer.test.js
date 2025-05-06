@@ -106,7 +106,7 @@ describe('SignupBuyer Component', () => {
 
     await waitFor(() => {
       expect(fetch).toHaveBeenCalledTimes(1);
-      expect(fetch).toHaveBeenCalledWith('https://shelfx-backend.onrender.com/SignupBuyer', expect.any(Object));
+      expect(fetch).toHaveBeenCalledWith('http://localhost:5000/SignupBuyer', expect.any(Object));
     });
 
     // Verify alert was shown

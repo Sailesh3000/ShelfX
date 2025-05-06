@@ -24,13 +24,13 @@ const upload = multer({ storage });
 
 app.use(
   cors({
-    origin:"https://shelfx-app.vercel.app",
+    origin:"http://localhost:5173",
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
   })
 );
 
-app.set('trust proxy', 1); 
+// app.set('trust proxy', 1); 
 
 app.use(cookieParser());
 app.use(express.json());
@@ -53,8 +53,8 @@ app.use(
     cookie: {
       maxAge: 24 * 60 * 60 * 1000,
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+      secure: false,
+      sameSite: 'lax'
     }
   })
 );
@@ -70,7 +70,7 @@ const swaggerDefinition = {
   },
   servers: [
     {
-      url: 'https://shelfx-backend.onrender.com',
+      url: 'http://localhost:5000',
       description: 'Development server',
     },
   ],
