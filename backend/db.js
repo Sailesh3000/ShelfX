@@ -16,6 +16,7 @@ import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
 import redisClient, { cacheMiddleware } from "./config/redis.js";
 import db from "./db.config.js";
+import { initializeSocket } from './socket.js';
 
 const app = express();
 const port = 5000;
@@ -99,26 +100,34 @@ app.use(errorHandler);
 // Export the db connection for use in other files
 export default db;
 
-// Connect to Redis before starting the server
+// Connect to Redis and start the server
 const startServer = async () => {
   try {
     // Connect to Redis
     await redisClient.connect();
     
-    // Start the server
-    app.listen(port, () => {
+    // Create HTTP server
+    const server = app.listen(port, () => {
       console.log(`Server is running on http://localhost:${port}`);
       console.log(`Swagger docs available at http://localhost:${port}/api-docs`);
       console.log('Redis caching enabled');
     });
+
+    // Initialize Socket.IO
+    initializeSocket(server);
+    console.log('Socket.IO server initialized');
   } catch (error) {
     console.error('Failed to connect to Redis:', error);
     // Start server even if Redis fails
-    app.listen(port, () => {
+    const server = app.listen(port, () => {
       console.log(`Server is running on http://localhost:${port}`);
       console.log(`Swagger docs available at http://localhost:${port}/api-docs`);
       console.log('Warning: Redis caching disabled');
     });
+
+    // Initialize Socket.IO even if Redis fails
+    initializeSocket(server);
+    console.log('Socket.IO server initialized');
   }
 };
 

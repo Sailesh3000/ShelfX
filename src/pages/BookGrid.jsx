@@ -400,7 +400,7 @@ const BookGrid = () => {
           <div className="mt-4">
             <Chat
               bookId={selectedBook.id}
-              sellerId={selectedBook.sellerId}
+              sellerId={selectedBook.userId}
               buyerId={user?.id}
               userType="buyer"
             />
@@ -647,7 +647,7 @@ const BookGrid = () => {
                   <div className="bg-[#393e46] rounded-lg p-4">
                     <Chat
                       bookId={selectedBook.id}
-                      sellerId={selectedBook.sellerId}
+                      sellerId={selectedBook.userId}
                       buyerId={user?.id}
                       userType="buyer"
                     />
