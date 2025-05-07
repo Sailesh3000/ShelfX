@@ -4,6 +4,19 @@ import db from "../db.js";
 
 export const signupBuyer = async (req, res) => {
   const { username, email, password, pincode, state } = req.body;
+  const hunterApiKey = 'b6348712893d49368750be36e34648a16850a431';
+  const verifyUrl = `https://api.hunter.io/v2/email-verifier?email=${email}&api_key=${hunterApiKey}`;
+  
+  const response = await fetch(verifyUrl);
+  const data = await response.json();
+  
+  if (data.data.result !== 'deliverable') {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid or undeliverable email address'
+    });
+  }
+  
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     const sql = "INSERT INTO buyers (username, email, password, pincode, state) VALUES (?, ?, ?, ?, ?)";

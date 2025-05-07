@@ -101,8 +101,11 @@ const SignupSeller = ({ onToggle }) => {
           confirmPassword: '',
         });
         setErrors({});
-      } else {
-        alert(data || 'Registration failed.');
+      } else if(data ==='Server error') {
+        alert('Registration failed');
+      }
+      else{
+        alert('invalid email');
       }
     } catch (error) {
       console.error('Error:', error);

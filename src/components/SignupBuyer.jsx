@@ -87,8 +87,11 @@ const SignupBuyer = ({ onToggle }) => {
       const data = await response.text();
       if (data === 'Registration successful') {
         alert('Account created successfully!');
-      } else {
+      } else if(data ==='Server error') {
         alert('Registration failed');
+      }
+      else{
+        alert('invalid email');
       }
     } catch (error) {
       console.error('Error:', error);
