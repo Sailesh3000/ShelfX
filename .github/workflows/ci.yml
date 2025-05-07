@@ -30,6 +30,13 @@ jobs:
       - name: Run audit (non-blocking)
         run: npm audit || true
 
+      - name: Run tests
+        run: |
+          cd backend
+          npm test
+          cd ../frontend
+          npm test
+
       - name: Build frontend
         run: npm run build
 
