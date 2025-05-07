@@ -53,14 +53,33 @@ const RequestList = ({ sellerId }) => {
   const handleApproveRequest = async (bookId, sellerId, userId) => {
     try {
       console.log(buyerDetails);
-      await axios.put(`http://localhost:5000/requests/${bookId}/approve`, { sellerId, userId, bookName: buyerDetails?.bookName , buyerEmail: buyerDetails?.email  },{ withCredentials: true });
-        setRequests((prevRequests) =>
-          prevRequests.map((req) =>
-            req.bookId === bookId && req.id === sellerId ? { ...req, status: 'approved' } : req
-          ))  
-        alert('Request approved and email sent!');
-    }catch (error) {
+      const response = await axios.put(
+        "http://localhost:5000/requests/approve", 
+        { 
+          bookId,
+          sellerId, 
+          userId, 
+          bookName: buyerDetails?.bookName, 
+          buyerEmail: buyerDetails?.email 
+        },
+        { withCredentials: true }
+      );
+      
+      setRequests((prevRequests) =>
+        prevRequests.map((req) =>
+          req.bookId === bookId && req.id === sellerId ? { ...req, status: 'approved' } : req
+        )
+      );
+
+      // Remove the approved book from the list
+      setRequests((prevRequests) => 
+        prevRequests.filter(req => !(req.bookId === bookId && req.id === sellerId))
+      );
+
+      alert(response.data.message || 'Request approved and email sent!');
+    } catch (error) {
       console.error('Error approving request:', error);
+      alert('Failed to approve request. Please try again.');
     }
   };
 

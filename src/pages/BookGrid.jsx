@@ -353,8 +353,8 @@ const BookGrid = () => {
       const requestData = {
         userId: selectedBook.userId, // Seller's user ID
         buyerId: user.id,             // Buyer's user ID
-        bookId: bookToBuy.id ,         // Book ID
-        sellerId : seller.userId
+        bookId: bookToBuy.id,         // Book ID
+        sellerId: seller.userId
       };
 
       const response = await axios.post("http://localhost:5000/request", requestData, {
@@ -370,7 +370,7 @@ const BookGrid = () => {
       console.error("Error requesting book:", error);
       setSnackbar({
         open: true,
-        message: "Failed to request the book.",
+        message: error.response?.data?.message || "Failed to request the book.",
         severity: "error",
       });
     } finally {
@@ -477,6 +477,18 @@ const BookGrid = () => {
     );
   };
 
+  const fetchBooks = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/books");
+      const data = await response.json();
+      console.log("Fetched books:", data); // Debug log
+      // Show all books, including sold ones
+      setUploadedImages(data);
+    } catch (error) {
+      console.error("Error fetching books:", error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#EEEEEE]">
       {/* Navigation Bar */}
@@ -564,11 +576,13 @@ const BookGrid = () => {
                 sortedBooks.map((book) => {
                   const bookId = Number(book.id);
                   const unreadCount = unreadMessages[bookId] || 0;
+                  const isSold = book.status === 'SOLD';
+                  const isApprovedBuyer = isSold && book.approvedBuyerId === user?.id;
                   
                   return (
                     <div
                       key={book.id}
-                      className="bg-[#222831] p-4 border rounded-md shadow-md flex flex-col justify-between min-h-[350px] w-[250px] relative"
+                      className="bg-[#222831] p-4 border rounded-md shadow-md flex flex-col justify-between min-h-[350px] w-[250px] relative overflow-hidden"
                     >
                       {/* Unread message indicator */}
                       {unreadCount > 0 && (
@@ -577,7 +591,22 @@ const BookGrid = () => {
                         </div>
                       )}
                       
-                      <span className={`absolute top-3 right-3 px-3 py-2 rounded-full text-sm font-bold text-white ${book.listingType?.trim().toLowerCase() === "rent" ? 'bg-blue-500' : 'bg-green-500'} shadow-lg z-10 border-2 ${book.listingType?.trim().toLowerCase() === "rent" ? 'border-blue-500' : 'border-green-500'}`}>
+                      {/* Sold overlay */}
+                      {isSold && (
+                        <div 
+                          className="absolute inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 rounded-md"
+                          style={{ pointerEvents: 'none' }}
+                        >
+                          <div className="text-center transform rotate-0">
+                            <span className="text-white text-3xl font-bold block mb-2">SOLD</span>
+                            {isApprovedBuyer && (
+                              <span className="text-[#FFD369] text-lg block">You purchased this book</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      
+                      <span className={`absolute top-3 right-3 px-3 py-2 rounded-full text-sm font-bold text-white ${book.listingType?.trim().toLowerCase() === "rent" ? 'bg-blue-500' : 'bg-green-500'} shadow-lg z-20 border-2 ${book.listingType?.trim().toLowerCase() === "rent" ? 'border-blue-500' : 'border-green-500'}`}>
                         {book.listingType?.trim().toLowerCase() === "rent" ? 'RENT' : 'SELL'}
                       </span>
                       <img
@@ -715,12 +744,25 @@ const BookGrid = () => {
               <div className="w-full mt-4">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-xl font-semibold">Chat with Seller</h3>
-                  <button
-                    onClick={() => handleChatOpen(selectedBook.id)}
-                    className="px-4 py-2 bg-[#FFD369] text-black rounded hover:bg-[#e6bd5f] transition-colors"
-                  >
-                    {showChat ? 'Hide Chat' : 'Show Chat'}
-                  </button>
+                  {selectedBook.status === 'SOLD' ? (
+                    selectedBook.approvedBuyerId === user?.id ? (
+                      <button
+                        onClick={() => handleChatOpen(selectedBook.id)}
+                        className="px-4 py-2 bg-[#FFD369] text-black rounded hover:bg-[#e6bd5f] transition-colors"
+                      >
+                        {showChat ? 'Hide Chat' : 'Show Chat'}
+                      </button>
+                    ) : (
+                      <span className="text-red-500">Chat not available - Book is sold</span>
+                    )
+                  ) : (
+                    <button
+                      onClick={() => handleChatOpen(selectedBook.id)}
+                      className="px-4 py-2 bg-[#FFD369] text-black rounded hover:bg-[#e6bd5f] transition-colors"
+                    >
+                      {showChat ? 'Hide Chat' : 'Show Chat'}
+                    </button>
+                  )}
                 </div>
                 {showChat && (
                   <div className="bg-[#393e46] rounded-lg p-4">
@@ -741,12 +783,14 @@ const BookGrid = () => {
                 >
                   Close
                 </button>
-                <button
-                  onClick={() => handleBuyRequest(selectedBook)}
-                  className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-                >
-                  Buy
-                </button>
+                {selectedBook.status !== 'SOLD' && (
+                  <button
+                    onClick={() => handleBuyRequest(selectedBook)}
+                    className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                  >
+                    Buy
+                  </button>
+                )}
               </div>
             </div>
           </div>

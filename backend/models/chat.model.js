@@ -3,25 +3,18 @@ import db from '../db.config.js';
 class Chat {
   static async initializeChat(bookId, sellerId, buyerId) {
     try {
-      // Check if chat already exists
+      // First check if chat already exists
       const [existingChat] = await db.query(
         'SELECT * FROM chat_rooms WHERE book_id = ? AND seller_id = ? AND buyer_id = ?',
         [bookId, sellerId, buyerId]
       );
 
       if (existingChat.length > 0) {
-        // Check if there are any messages
-        const [messages] = await db.query(
-          'SELECT * FROM messages WHERE chat_room_id = ?',
-          [existingChat[0].id]
-        );
-        
-        if (messages.length > 0) {
-          return existingChat[0];
-        }
+        console.log('Existing chat room found:', existingChat[0]);
+        return existingChat[0];
       }
 
-      // Create new chat room
+      // If no existing chat, create new one
       const [result] = await db.query(
         'INSERT INTO chat_rooms (book_id, seller_id, buyer_id) VALUES (?, ?, ?)',
         [bookId, sellerId, buyerId]
@@ -30,6 +23,16 @@ class Chat {
       return { id: result.insertId, book_id: bookId, seller_id: sellerId, buyer_id: buyerId };
     } catch (error) {
       console.error('Error in initializeChat:', error);
+      // If it's a duplicate entry error, try to fetch the existing chat
+      if (error.code === 'ER_DUP_ENTRY') {
+        const [existingChat] = await db.query(
+          'SELECT * FROM chat_rooms WHERE book_id = ? AND seller_id = ? AND buyer_id = ?',
+          [bookId, sellerId, buyerId]
+        );
+        if (existingChat.length > 0) {
+          return existingChat[0];
+        }
+      }
       throw error;
     }
   }
@@ -60,14 +63,6 @@ class Chat {
     try {
       if (!content || !chatRoomId || !senderId) {
         throw new Error('Missing required message data');
-      }
-
-      // First check if sender is a buyer or seller
-      const [buyer] = await db.query('SELECT id FROM buyers WHERE id = ?', [senderId]);
-      const [seller] = await db.query('SELECT id FROM users WHERE id = ?', [senderId]);
-
-      if (!buyer.length && !seller.length) {
-        throw new Error('Invalid sender ID');
       }
 
       // Get the chat room to determine if sender is buyer or seller

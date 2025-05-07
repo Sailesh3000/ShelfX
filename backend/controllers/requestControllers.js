@@ -26,7 +26,7 @@ export const getRequestsBySellerId = async (req, res) => {
             JOIN 
                 users s ON r.sellerId = s.id
             WHERE 
-                r.sellerId = ? AND status = "PENDING";
+                r.sellerId = ? AND r.status = "PENDING";
         `;
 
         const [rows] = await db.query(sql, [sellerId]);
@@ -43,22 +43,35 @@ export const getRequestsBySellerId = async (req, res) => {
 };
 
 export const approveRequest = async (req, res) => {
-    const { bookId } = req.params;
-    const { sellerId, userId, bookName, buyerEmail } = req.body; 
+    const { bookId, sellerId, userId, bookName, buyerEmail } = req.body;
 
     try {
-        const sql = "UPDATE request SET status = ? WHERE bookId = ? AND sellerId = ? AND userId = ?";
-        const [result] = await db.query(sql, ["APPROVED", bookId, sellerId, userId]);
+        // Update request status to APPROVED
+        const [result] = await db.query(
+            "UPDATE request SET status = 'APPROVED' WHERE bookId = ? AND sellerId = ? AND userId = ?",
+            [bookId, sellerId, userId]
+        );
 
         if (result.affectedRows === 0) {
-            return res.status(404).json({ message: 'Request not found' });
+            return res.status(404).json({ message: "Request not found" });
         }
 
-        await sendApprovalEmail(buyerEmail, bookName);
-        res.json({ message: "Request approved successfully, email sent to buyer and seller!" });
+        // Mark book as SOLD and store the approved buyer's ID
+        await db.query(
+            "UPDATE books SET status = 'SOLD', approvedBuyerId = ? WHERE id = ?",
+            [userId, bookId]
+        );
+
+        // Send approval email
+        const emailSent = await sendApprovalEmail(buyerEmail, bookName);
+        if (!emailSent) {
+            console.error("Failed to send approval email");
+        }
+
+        res.json({ message: "Request approved and book marked as sold" });
     } catch (error) {
         console.error("Error approving request:", error);
-        res.status(500).json({ message: "Error approving request", error });
+        res.status(500).json({ message: "Error approving request" });
     }
 };
 

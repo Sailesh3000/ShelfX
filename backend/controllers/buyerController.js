@@ -63,7 +63,7 @@ export const exploreBuyer = async (req, res) => {
     
         const user = rowsUser[0];  
     
-        const sqlBooks = 'SELECT id,userId,bookname, address, pincode, price, imageData, listingType FROM books';
+        const sqlBooks = 'SELECT id, userId, bookname, address, pincode, price, imageData, listingType, status, approvedBuyerId FROM books';
         const [rowsBooks] = await db.query(sqlBooks);
     
         const books = rowsBooks.map(book => ({
@@ -71,10 +71,12 @@ export const exploreBuyer = async (req, res) => {
           pincode: book.pincode,
           price: book.price,
           id: book.id,
-          userId:book.userId,
-          bookName:book.bookname,
+          userId: book.userId,
+          bookName: book.bookname,
           imageUrl: book.imageData || null,
           listingType: book.listingType,
+          status: book.status,
+          approvedBuyerId: book.approvedBuyerId
         }));
     
         res.json({ user, books });
@@ -104,12 +106,20 @@ export const postRequest = async (req, res) => {
     }
 
     try {
+        // Check if request already exists
+        const checkSql = "SELECT * FROM request WHERE userId = ? AND bookId = ? AND sellerId = ?";
+        const [existingRequests] = await db.query(checkSql, [userId, bookId, sellerId]);
+        
+        if (existingRequests.length > 0) {
+            return res.status(400).json({ message: "You have already requested this book" });
+        }
+
         const sql = "INSERT INTO request (userId, bookId, sellerId) VALUES (?, ?, ?)";
         await db.query(sql, [userId, bookId, sellerId]);
-        res.status(201).send("Request created successfully");
+        res.status(201).json({ message: "Request created successfully" });
     } catch (err) {
         console.error("Error creating request:", err);
-        res.status(500).send("Server error");
+        res.status(500).json({ message: "Server error" });
     }
 };
 

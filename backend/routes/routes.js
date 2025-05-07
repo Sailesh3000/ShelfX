@@ -70,7 +70,7 @@ router.get("/status", getBookStatus);
 // Requests
 router.post("/request", postRequest);
 router.get("/requests/:sellerId", getRequestsBySellerId);
-router.put("/requests/:bookId/approve", approveRequest);
+router.put("/requests/approve", approveRequest);
 router.put("/requests/:bookId/reject", rejectRequest);
 
 // Subscriptions

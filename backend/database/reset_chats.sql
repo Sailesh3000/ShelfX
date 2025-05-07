@@ -1,3 +1,8 @@
+-- Drop existing tables if they exist
+DROP TABLE IF EXISTS messages;
+DROP TABLE IF EXISTS chat_rooms;
+
+-- Create new tables with updated schema
 CREATE TABLE IF NOT EXISTS chat_rooms (
     id INT PRIMARY KEY AUTO_INCREMENT,
     book_id INT NOT NULL,

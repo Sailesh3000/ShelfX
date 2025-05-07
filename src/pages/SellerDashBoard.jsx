@@ -576,6 +576,7 @@ const SellerProfile = () => {
             Show Books
           </button></div>
             </div>
+            {user && <RequestList sellerId={user.id} />}
           </div>
         ) : activeTab === 'showBoooks' && (
           <div className="mt-8">
