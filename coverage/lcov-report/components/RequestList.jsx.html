@@ -328,7 +328,7 @@ const RequestList = <span class="fstat-no" title="function not covered" >({</spa
 <span class="cstat-no" title="statement not covered" >  useEffect(<span class="fstat-no" title="function not covered" >()</span> =&gt; {</span>
     const fetchRequests = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >as</span>ync () =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >      try {</span>
-        const response = <span class="cstat-no" title="statement not covered" >await axios.get(`http://localhost:5000/requests/${sellerId}`, {</span>
+        const response = <span class="cstat-no" title="statement not covered" >await axios.get(`https://shelfx-backend.onrender.com/requests/${sellerId}`, {</span>
           withCredentials: true,
         });
 <span class="cstat-no" title="statement not covered" >        console.log(response.data);</span>
@@ -359,7 +359,7 @@ const RequestList = <span class="fstat-no" title="function not covered" >({</spa
   const handleApproveRequest = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >as</span>ync (bookId, sellerId, userId) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    try {</span>
 <span class="cstat-no" title="statement not covered" >      console.log(buyerDetails);</span>
-<span class="cstat-no" title="statement not covered" >      await axios.put(`http://localhost:5000/requests/${bookId}/approve`, { sellerId, userId, bookName: buyerDetails?.bookName , buyerEmail: buyerDetails?.email  },{ withCredentials: true });</span>
+<span class="cstat-no" title="statement not covered" >      await axios.put(`https://shelfx-backend.onrender.com/requests/${bookId}/approve`, { sellerId, userId, bookName: buyerDetails?.bookName , buyerEmail: buyerDetails?.email  },{ withCredentials: true });</span>
 <span class="cstat-no" title="statement not covered" >        setRequests(<span class="fstat-no" title="function not covered" >(p</span>revRequests) =&gt;</span>
 <span class="cstat-no" title="statement not covered" >          prevRequests.map(<span class="fstat-no" title="function not covered" >(r</span>eq) =&gt;</span>
 <span class="cstat-no" title="statement not covered" >            req.bookId === bookId &amp;&amp; req.id === sellerId ? { ...req, status: 'approved' } : req</span>
@@ -372,7 +372,7 @@ const RequestList = <span class="fstat-no" title="function not covered" >({</spa
 &nbsp;
   const handleRejectRequest = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >as</span>ync (bookId, sellerId, userId) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    try {</span>
-<span class="cstat-no" title="statement not covered" >      await axios.put(`http://localhost:5000/requests/${bookId}/reject`, { sellerId, userId },{ withCredentials: true });</span>
+<span class="cstat-no" title="statement not covered" >      await axios.put(`https://shelfx-backend.onrender.com/requests/${bookId}/reject`, { sellerId, userId },{ withCredentials: true });</span>
 <span class="cstat-no" title="statement not covered" >      setRequests(<span class="fstat-no" title="function not covered" >(p</span>revRequests) =&gt;</span>
 <span class="cstat-no" title="statement not covered" >        prevRequests.map(<span class="fstat-no" title="function not covered" >(r</span>eq) =&gt;</span>
 <span class="cstat-no" title="statement not covered" >          req.bookId === bookId &amp;&amp; req.id === sellerId ? { ...req, status: 'rejected' } : req</span>

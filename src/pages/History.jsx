@@ -49,7 +49,7 @@ export default Card;
 //     const fetchRequests = async () => {
 //       try {
 //         setLoading(true);
-//         const response = await axios.get(`http://localhost:5000/requests/status`, {
+//         const response = await axios.get(`https://shelfx-backend.onrender.com/requests/status`, {
 //           withCredentials: true,
 //         });
 //         setRequests(response.data.requests);

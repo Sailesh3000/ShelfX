@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import io from 'socket.io-client';
 
-const API_BASE_URL = 'http://localhost:5000';
-const SOCKET_URL = 'http://localhost:5000';
+const API_BASE_URL = 'https://shelfx-backend.onrender.com';
+const SOCKET_URL = 'https://shelfx-backend.onrender.com';
 
 const Chat = ({ bookId, sellerId, buyerId, userType }) => {
   const [messages, setMessages] = useState([]);

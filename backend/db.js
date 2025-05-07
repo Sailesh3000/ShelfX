@@ -46,16 +46,16 @@ const sessionStore = new MySQLStore({}, db);
 
 app.use(
   session({
-    key: "session_cookie_name",
-    secret: "asdg34NJSQKK78",
+    key: process.env.SESSION_KEY || "session_cookie_name",
+    secret: process.env.SESSION_SECRET || "asdg34NJSQKK78",
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
     cookie: {
-      maxAge: 24 * 60 * 60 * 1000,
+      maxAge:  24 * 60 * 60 * 1000,
       httpOnly: true,
-      secure: false,
-      sameSite: 'lax'
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
     }
   })
 );
@@ -71,7 +71,7 @@ const swaggerDefinition = {
   },
   servers: [
     {
-      url: 'http://localhost:5000',
+      url: 'https://shelfx-backend.onrender.com',
       description: 'Development server',
     },
   ],

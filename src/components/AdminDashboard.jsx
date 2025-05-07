@@ -63,15 +63,15 @@ const AdminDashboard = () => {
           revenueRes,
           booksRes,
         ] = await Promise.all([
-          axios.get("http://localhost:5000/sellers"),
-          axios.get("http://localhost:5000/buyers"),
-          axios.get("http://localhost:5000/books/count"),
-          axios.get("http://localhost:5000/countSellers"),
-          axios.get("http://localhost:5000/countBuyers"),
-          axios.get("http://localhost:5000/subscription"),
-          axios.get("http://localhost:5000/books/sold"),
-          axios.get("http://localhost:5000/revenue"),
-          axios.get("http://localhost:5000/admin/books"),
+          axios.get("https://shelfx-backend.onrender.com/sellers"),
+          axios.get("https://shelfx-backend.onrender.com/buyers"),
+          axios.get("https://shelfx-backend.onrender.com/books/count"),
+          axios.get("https://shelfx-backend.onrender.com/countSellers"),
+          axios.get("https://shelfx-backend.onrender.com/countBuyers"),
+          axios.get("https://shelfx-backend.onrender.com/subscription"),
+          axios.get("https://shelfx-backend.onrender.com/books/sold"),
+          axios.get("https://shelfx-backend.onrender.com/revenue"),
+          axios.get("https://shelfx-backend.onrender.com/admin/books"),
         ]);
 
         setSellers(sellersRes.data);
@@ -121,7 +121,7 @@ const AdminDashboard = () => {
 
   const handleDeleteClickSeller = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/sellers/${id}`);
+      await axios.delete(`https://shelfx-backend.onrender.com/sellers/${id}`);
       setSellers(sellers.filter((seller) => seller.id !== id));
     } catch (err) {
       console.error("Error deleting seller:", err);
@@ -130,7 +130,7 @@ const AdminDashboard = () => {
 
   const handleDeleteClickBuyer = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/buyers/${id}`);
+      await axios.delete(`https://shelfx-backend.onrender.com/buyers/${id}`);
       setBuyers(buyers.filter((buyer) => buyer.id !== id));
     } catch (err) {
       console.error("Error deleting seller:", err);
@@ -140,7 +140,7 @@ const AdminDashboard = () => {
   const handleSaveSeller = async () => {
     try {
       await axios.put(
-        `http://localhost:5000/sellers/${editSeller.id}`,
+        `https://shelfx-backend.onrender.com/sellers/${editSeller.id}`,
         editSeller
       );
       setSellers(
@@ -158,7 +158,7 @@ const AdminDashboard = () => {
   const handleSaveBuyer = async () => {
     try {
       await axios.put(
-        `http://localhost:5000/buyers/${editBuyer.id}`,
+        `https://shelfx-backend.onrender.com/buyers/${editBuyer.id}`,
         editBuyer
       );
       setBuyers(
@@ -180,7 +180,7 @@ const AdminDashboard = () => {
 
   const handleDeleteBook = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/admin/books/${id}`);
+      await axios.delete(`https://shelfx-backend.onrender.com/admin/books/${id}`);
       setBooks(books.filter((book) => book.id !== id));
     } catch (err) {
       console.error("Error deleting book:", err);
@@ -190,7 +190,7 @@ const AdminDashboard = () => {
   const handleSaveBook = async () => {
     try {
       await axios.put(
-        `http://localhost:5000/admin/books/${editBook.id}`,
+        `https://shelfx-backend.onrender.com/admin/books/${editBook.id}`,
         editBook
       );
       setBooks(
@@ -207,7 +207,7 @@ const AdminDashboard = () => {
 
   const handleLogout = async () => {
     try {
-      await axios.post("http://localhost:5000/admin/logout");
+      await axios.post("https://shelfx-backend.onrender.com/admin/logout");
       window.location.href = "/adminLogin"; // Redirect to admin login page
     } catch (err) {
       console.error("Error logging out:", err);

@@ -11,7 +11,7 @@ const BuyerHistory = ({ buyerId }) => {
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/history/buyer/${buyerId}`, {
+        const response = await axios.get(`https://shelfx-backend.onrender.com/history/buyer/${buyerId}`, {
           withCredentials: true
         });
         setHistory(response.data.history);

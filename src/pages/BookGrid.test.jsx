@@ -96,13 +96,13 @@ describe('BookGrid Component', () => {
     jest.clearAllMocks();
     
     axios.get.mockImplementation((url) => {
-      if (url === 'http://localhost:5000/check-auth') {
+      if (url === 'https://shelfx-backend.onrender.com/check-auth') {
         return Promise.resolve({ data: { authenticated: true } });
-      } else if (url === 'http://localhost:5000/explore') {
+      } else if (url === 'https://shelfx-backend.onrender.com/explore') {
         return Promise.resolve({ data: { user: mockUser, books: mockBooks } });
-      } else if (url === 'http://localhost:5000/status') {
+      } else if (url === 'https://shelfx-backend.onrender.com/status') {
         return Promise.resolve({ data: { requests: mockRequests } });
-      } else if (url.includes('http://localhost:5000/sellerdetails/')) {
+      } else if (url.includes('https://shelfx-backend.onrender.com/sellerdetails/')) {
         return Promise.resolve({ data: { user: mockSeller } });
       }
       return Promise.reject(new Error('Not found'));
@@ -210,7 +210,7 @@ describe('BookGrid Component', () => {
     });
 
     expect(axios.post).toHaveBeenCalledWith(
-      'http://localhost:5000/request',
+      'https://shelfx-backend.onrender.com/request',
       expect.any(Object),
       { withCredentials: true }
     );
@@ -266,7 +266,7 @@ describe('BookGrid Component', () => {
     fireEvent.click(logoutButton);
 
     expect(axios.post).toHaveBeenCalledWith(
-      'http://localhost:5000/logout',
+      'https://shelfx-backend.onrender.com/logout',
       {},
       { withCredentials: true }
     );

@@ -1469,7 +1469,7 @@ const SellerProfile = () =&gt; {
   // Function to check if user is authenticated
   const checkAuthentication = async () =&gt; {
     try {
-      const response = await axios.get('http://localhost:5000/check-auth', {
+      const response = await axios.get('https://shelfx-backend.onrender.com/check-auth', {
         withCredentials: true,
       });
       
@@ -1564,7 +1564,7 @@ const SellerProfile = () =&gt; {
 &nbsp;
 <span class="cstat-no" title="statement not covered" >        console.log("Base64 Image:", base64Image.slice(0, 50)); </span>// Debugging log (first 50 chars)
 &nbsp;
-        const uploadResponse = <span class="cstat-no" title="statement not covered" >await axios.post('http://localhost:5000/uploadBook', {</span>
+        const uploadResponse = <span class="cstat-no" title="statement not covered" >await axios.post('https://shelfx-backend.onrender.com/uploadBook', {</span>
             bookName,
             address,
             pincode,
@@ -1598,7 +1598,7 @@ const SellerProfile = () =&gt; {
 &nbsp;
   const fetchUserDetails = async () =&gt; {
     try {
-      const response = await axios.get('http://localhost:5000/details', {
+      const response = await axios.get('https://shelfx-backend.onrender.com/details', {
         withCredentials: true,
       });
       setUser(response.data.user);
@@ -1634,7 +1634,7 @@ const SellerProfile = () =&gt; {
 <span class="cstat-no" title="statement not covered" >    if (!userId) <span class="cstat-no" title="statement not covered" >return;</span></span>
     
 <span class="cstat-no" title="statement not covered" >    try {</span>
-      const response = <span class="cstat-no" title="statement not covered" >await axios.get(`http://localhost:5000/subscription/${userId}`, {</span>
+      const response = <span class="cstat-no" title="statement not covered" >await axios.get(`https://shelfx-backend.onrender.com/subscription/${userId}`, {</span>
         withCredentials: true,
       });
 <span class="cstat-no" title="statement not covered" >      setSubscription(response.data);</span>
@@ -1653,7 +1653,7 @@ const SellerProfile = () =&gt; {
 &nbsp;
   const handleDelete = <span class="fstat-no" title="function not covered" >as</span>ync (bookId) =&gt; {
 <span class="cstat-no" title="statement not covered" >    try {</span>
-      const response = <span class="cstat-no" title="statement not covered" >await axios.delete(`http://localhost:5000/deleteBook/${bookId}`, {</span>
+      const response = <span class="cstat-no" title="statement not covered" >await axios.delete(`https://shelfx-backend.onrender.com/deleteBook/${bookId}`, {</span>
         withCredentials: true,
       });
 &nbsp;
@@ -1692,7 +1692,7 @@ const SellerProfile = () =&gt; {
     }
   
 <span class="cstat-no" title="statement not covered" >    try {</span>
-      const response = <span class="cstat-no" title="statement not covered" >await fetch('http://localhost:5000/Edituserprofile', {</span>
+      const response = <span class="cstat-no" title="statement not covered" >await fetch('https://shelfx-backend.onrender.com/Edituserprofile', {</span>
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1730,7 +1730,7 @@ const SellerProfile = () =&gt; {
     }
   
 <span class="cstat-no" title="statement not covered" >    try {</span>
-      const response = <span class="cstat-no" title="statement not covered" >await fetch('http://localhost:5000/Edituserprofile', {</span>
+      const response = <span class="cstat-no" title="statement not covered" >await fetch('https://shelfx-backend.onrender.com/Edituserprofile', {</span>
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1755,7 +1755,7 @@ const SellerProfile = () =&gt; {
   const handleLogout = <span class="fstat-no" title="function not covered" >as</span>ync () =&gt; {
 <span class="cstat-no" title="statement not covered" >    try {</span>
       const response = <span class="cstat-no" title="statement not covered" >await axios.post(</span>
-        "http://localhost:5000/logout",
+        "https://shelfx-backend.onrender.com/logout",
         {},
         {
           withCredentials: true,

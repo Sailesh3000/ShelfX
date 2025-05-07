@@ -2,8 +2,8 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import axios from 'axios';
 
-const SOCKET_URL = 'http://localhost:5000';
-const API_BASE_URL = 'http://localhost:5000';
+const SOCKET_URL = 'https://shelfx-backend.onrender.com';
+const API_BASE_URL = 'https://shelfx-backend.onrender.com';
 
 const SocketContext = createContext();
 

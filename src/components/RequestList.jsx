@@ -17,7 +17,7 @@ const RequestList = ({ sellerId }) => {
       if (!sellerId) return;
       
       try {
-        const response = await axios.get(`http://localhost:5000/requests/${sellerId}`, {
+        const response = await axios.get(`https://shelfx-backend.onrender.com/requests/${sellerId}`, {
           withCredentials: true,
         });
         
@@ -54,7 +54,7 @@ const RequestList = ({ sellerId }) => {
     try {
       console.log(buyerDetails);
       const response = await axios.put(
-        "http://localhost:5000/requests/approve", 
+        "https://shelfx-backend.onrender.com/requests/approve", 
         { 
           bookId,
           sellerId, 
@@ -85,7 +85,7 @@ const RequestList = ({ sellerId }) => {
 
   const handleRejectRequest = async (bookId, sellerId, userId) => {
     try {
-      await axios.put(`http://localhost:5000/requests/${bookId}/reject`, { sellerId, userId },{ withCredentials: true });
+      await axios.put(`https://shelfx-backend.onrender.com/requests/${bookId}/reject`, { sellerId, userId },{ withCredentials: true });
       setRequests((prevRequests) =>
         prevRequests.map((req) =>
           req.bookId === bookId && req.id === sellerId ? { ...req, status: 'rejected' } : req
