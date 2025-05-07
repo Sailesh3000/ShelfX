@@ -16,6 +16,7 @@ import axios from "axios";
 import bcrypt from 'bcryptjs';
 import Chat from '../components/Chat';
 import { useSocket } from '../context/SocketContext';
+import BuyerHistory from '../components/BuyerHistory';
 
 
 const BookGrid = () => {
@@ -59,6 +60,7 @@ const BookGrid = () => {
   });
   const [showChat, setShowChat] = useState(false);
   const [currentChatBookId, setCurrentChatBookId] = useState(null);
+  const [showHistory, setShowHistory] = useState(false);
 
   // Initial authentication check
   useEffect(() => {
@@ -516,6 +518,16 @@ const BookGrid = () => {
             >
               My Requests
             </button>
+            <button
+              onClick={() => setActiveTab("history")}
+              className={`px-4 py-2 rounded-lg transition-all duration-200 ${
+                activeTab === "history"
+                  ? "bg-[#FFD369] text-gray-900 font-semibold"
+                  : "hover:bg-[#4a4f57] text-white"
+              }`}
+            >
+              History
+            </button>
           </div>
           <div className="flex items-center space-x-4 border-l border-gray-600 pl-6">
             <FaUserCircle className="w-8 h-8 text-[#FFD369]" />
@@ -674,6 +686,11 @@ const BookGrid = () => {
                 <p className="text-center text-gray-500">No requests found</p>
               )}
             </div>
+          </div>
+        ) : activeTab === "history" ? (
+          <div className="p-8">
+            <h1 className="text-2xl font-bold mb-6 text-[#222831]">Purchase History</h1>
+            <BuyerHistory buyerId={user?.id} />
           </div>
         ) : null}
       </div>

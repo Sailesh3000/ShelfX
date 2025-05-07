@@ -1,5 +1,5 @@
 import express from "express";
-import { booksCount } from '../controllers/bookController.js';
+import { booksCount, getAllBooks, updateBook, deleteBook, getBookUpdates, getBooksSold, getRevenue } from '../controllers/bookController.js';
 import {
     signupSeller,
     loginSeller,
@@ -11,8 +11,7 @@ import {
     editUserProfile,
     deleteSellerById,
     uploadBook,
-    logout,
-    deleteBook
+    logout
 } from "../controllers/sellerController.js"; 
 import { 
     signupBuyer, 
@@ -36,7 +35,11 @@ import {
     getSubscriptionByUserId,
     subscribePlan
 } from "../controllers/subscriptionController.js"; 
-import { adminStatus } from "../controllers/adminController.js";
+import { 
+    adminStatus,
+    adminLogout 
+} from "../controllers/adminController.js";
+import { getBuyerHistory, getSellerHistory } from '../controllers/historyController.js';
 import multer from 'multer'; // Middleware for handling file uploads
 import chatRoutes from './chat.routes.js';
 
@@ -53,7 +56,6 @@ router.get("/countSellers", getCountSellers); // admin
 router.get("/sellerdetails/:id", getSellerDetailsById);
 router.put("/sellers/:id", updateSellerDetailsById);
 router.delete("/sellers/:id", deleteSellerById); // admin
-router.delete("/deleteBook/:id",deleteBook);
 router.post("/logout", logout);
 
 // Buyers
@@ -83,6 +85,14 @@ router.get("/subscription/:id", getSubscriptionByUserId);
 
 router.get('/books/count', booksCount);  // admin
 router.post('/uploadBook', uploadBook);
+router.get('/books/sold', getBooksSold);  // admin
+router.get('/revenue', getRevenue);  // admin
+
+// Admin Book Management Routes
+router.get('/admin/books', getAllBooks);
+router.put('/admin/books/:id', updateBook);
+router.delete('/admin/books/:id', deleteBook);
+router.get('/admin/books/updates', getBookUpdates);
 
 // authentication middleware
 router.get("/check-auth", (req, res) => {
@@ -97,5 +107,12 @@ router.get("/check-auth", (req, res) => {
 
 // Chat routes
 router.use('/api/chat', chatRoutes);
+
+// Admin routes
+router.post("/admin/logout", adminLogout);
+
+// History routes
+router.get('/history/buyer/:buyerId', getBuyerHistory);
+router.get('/history/seller/:sellerId', getSellerHistory);
 
 export default router;

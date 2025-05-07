@@ -26,6 +26,7 @@ jest.mock('bcryptjs', () => ({
 
 const mockNavigate = jest.fn();
 
+// Mock FileReader
 global.FileReader = class {
   constructor() {
     this.onload = null;
@@ -92,7 +93,6 @@ const renderWithProviders = (component) => {
 describe('SellerProfile Component', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-
     axios.get.mockImplementation((url) => {
       if (url === 'http://localhost:5000/check-auth') {
         return Promise.resolve({ data: { authenticated: true } });
@@ -102,6 +102,8 @@ describe('SellerProfile Component', () => {
         return Promise.resolve({ data: mockSubscription });
       } else if (url.includes('requests')) {
         return Promise.resolve({ data: [] });
+      } else if (url.includes('active-chats')) {
+        return Promise.resolve({ data: [] });
       }
       return Promise.reject(new Error('Not found'));
     });
@@ -109,75 +111,97 @@ describe('SellerProfile Component', () => {
 
   test('renders loading state initially', () => {
     renderWithProviders(<SellerProfile />);
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    const loadingElement = screen.getByRole('progressbar');
+    expect(loadingElement).toBeInTheDocument();
   });
 
   test('renders user profile after loading', async () => {
-    await act(async () => {
-      renderWithProviders(<SellerProfile />);
-    });
-
+    renderWithProviders(<SellerProfile />);
+    
     await waitFor(() => {
-      expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+      const loadingElement = screen.queryByRole('progressbar');
+      expect(loadingElement).not.toBeInTheDocument();
     });
 
     expect(screen.getByText('testuser')).toBeInTheDocument();
-    expect(screen.getByText('Home')).toBeInTheDocument();
     expect(screen.getByText('My Books')).toBeInTheDocument();
+    expect(screen.getByText('Chats')).toBeInTheDocument();
+    expect(screen.getByText('History')).toBeInTheDocument();
     expect(screen.getByText('Logout')).toBeInTheDocument();
   });
 
-  test('changes tab when clicked', async () => {
-    await act(async () => {
-      renderWithProviders(<SellerProfile />);
-    });
-
+  test('handles book upload dialog correctly', async () => {
+    renderWithProviders(<SellerProfile />);
+    
     await waitFor(() => {
-      expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+      const loadingElement = screen.queryByRole('progressbar');
+      expect(loadingElement).not.toBeInTheDocument();
     });
 
-    expect(screen.getByText('Upload a book')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByText('Home'));
-
-    expect(screen.getByText('Welcome to ShelfX!')).toBeInTheDocument();
-    expect(screen.getByText('Change your password')).toBeInTheDocument();
-  });
-
-  test('opens and closes upload dialog', async () => {
     await act(async () => {
-      renderWithProviders(<SellerProfile />);
+      fireEvent.click(screen.getByText('Upload a book'));
     });
-
-    await waitFor(() => {
-      expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
-    });
-
-    fireEvent.click(screen.getByText('Upload a book'));
 
     expect(screen.getByText('Upload a Book')).toBeInTheDocument();
-    fireEvent.click(screen.getByText('Cancel'));
+    expect(screen.getByLabelText('Book Name')).toBeInTheDocument();
+    expect(screen.getByLabelText('Address')).toBeInTheDocument();
+    expect(screen.getByLabelText('Pincode')).toBeInTheDocument();
+    expect(screen.getByLabelText('Price')).toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.click(screen.getByText('Cancel'));
+    });
 
     await waitFor(() => {
       expect(screen.queryByText('Upload a Book')).not.toBeInTheDocument();
     });
   });
 
-  test('redirects to login if not authenticated', async () => {
-    axios.get.mockImplementation((url) => {
-      if (url === 'http://localhost:5000/check-auth') {
-        return Promise.resolve({ data: { authenticated: false } });
-      }
-      return Promise.reject(new Error('Not found'));
+  test('handles book deletion', async () => {
+    axios.delete.mockResolvedValueOnce({ status: 200 });
+
+    renderWithProviders(<SellerProfile />);
+    
+    await waitFor(() => {
+      const loadingElement = screen.queryByRole('progressbar');
+      expect(loadingElement).not.toBeInTheDocument();
     });
 
     await act(async () => {
-      renderWithProviders(<SellerProfile />);
+      fireEvent.click(screen.getByText('Show Books'));
     });
 
-    await waitFor(() => {
-    //   expect(mockNavigate).toHaveBeenCalledWith('/login-seller');
+    const removeButton = screen.getByText('Remove');
+    await act(async () => {
+      fireEvent.click(removeButton);
     });
+
+    expect(axios.delete).toHaveBeenCalledWith(
+      'http://localhost:5000/deleteBook/1',
+      expect.any(Object)
+    );
+  });
+
+  test('handles logout correctly', async () => {
+    axios.post.mockResolvedValueOnce({ status: 200 });
+
+    renderWithProviders(<SellerProfile />);
+    
+    await waitFor(() => {
+      const loadingElement = screen.queryByRole('progressbar');
+      expect(loadingElement).not.toBeInTheDocument();
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByText('Logout'));
+    });
+
+    expect(axios.post).toHaveBeenCalledWith(
+      'http://localhost:5000/logout',
+      {},
+      expect.any(Object)
+    );
+    expect(mockNavigate).toHaveBeenCalledWith('/');
   });
 
   test('redirects to login if not authenticated', async () => {
@@ -188,12 +212,12 @@ describe('SellerProfile Component', () => {
       return Promise.reject(new Error('Not found'));
     });
 
-    await act(async () => {
-      renderWithProviders(<SellerProfile />);
-    });
+    renderWithProviders(<SellerProfile />);
 
-    // await waitFor(() => {
-    //   expect(mockNavigate).toHaveBeenCalledWith('/login-seller');
-    // });
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/login-seller', {
+        state: { from: '/seller-profile' }
+      });
+    });
   });
 });

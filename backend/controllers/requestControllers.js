@@ -1,5 +1,6 @@
 import db from "../db.js"; // Adjust this import to match your db file structure
 import { sendApprovalEmail } from "./emailService.js";
+import { addToHistory } from "./historyController.js";
 
 export const getRequestsBySellerId = async (req, res) => {
     const { sellerId } = req.params;
@@ -55,6 +56,26 @@ export const approveRequest = async (req, res) => {
         if (result.affectedRows === 0) {
             return res.status(404).json({ message: "Request not found" });
         }
+
+        // Get book price
+        const [bookRows] = await db.query(
+            "SELECT price FROM books WHERE id = ?",
+            [bookId]
+        );
+
+        if (bookRows.length === 0) {
+            return res.status(404).json({ message: "Book not found" });
+        }
+
+        // Add to history
+        await addToHistory(
+            bookId,
+            sellerId,
+            userId,
+            bookName,
+            bookRows[0].price,
+            'APPROVED'
+        );
 
         // Mark book as SOLD and store the approved buyer's ID
         await db.query(

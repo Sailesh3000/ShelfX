@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, CircularProgress, Snackbar, Alert } from '@mui/material';
 import RequestList from '../components/RequestList';
+import RequestHistory from '../components/RequestHistory';
 import Chat from '../components/Chat';
 import bcrypt from 'bcryptjs';
 import io from 'socket.io-client';
@@ -514,6 +515,16 @@ const SellerProfile = () => {
             >
               Chats
             </button>
+            <button
+              onClick={() => handleTabClick('history')}
+              className={`px-4 py-2 rounded-lg transition-all duration-200 ${
+                activeTab === 'history'
+                  ? 'bg-[#FFD369] text-gray-900 font-semibold'
+                  : 'hover:bg-[#4a4f57] text-white'
+              }`}
+            >
+              History
+            </button>
           </div>
           <div className="flex items-center space-x-4 border-l border-gray-600 pl-6">
             <FaUserCircle className="w-8 h-8 text-[#FFD369]" />
@@ -534,27 +545,28 @@ const SellerProfile = () => {
       </nav>
 
       {/* Tab Content */}
-      <div className="p-8 ">
+      <div className="p-8">
         {activeTab === 'home' ? (
           <div>
             <h2 className="text-2xl font-bold text-[#222831]">Welcome to ShelfX!</h2>
             <div className='flex flex-between '>
-            <div className="bg-[#393E46] text-white flex flex-col items-center mt-4 justify-center w-52 h-36 rounded-md shadow-md mr-[20px]">
-              <button 
-                className="text-[#FFD369] font-semibold" 
-                onClick={() => setOpenpassDialog(true)}
-              >
-                Change your password 
-              </button>
+              <div className="bg-[#393E46] text-white flex flex-col items-center mt-4 justify-center w-52 h-36 rounded-md shadow-md mr-[20px]">
+                <button 
+                  className="text-[#FFD369] font-semibold" 
+                  onClick={() => setOpenpassDialog(true)}
+                >
+                  Change your password 
+                </button>
+              </div>
+              <div className="bg-[#393E46] text-white flex flex-col items-center mt-4 justify-center w-52 h-36 rounded-md shadow-md">
+                <button 
+                  className="text-[#FFD369] font-semibold" 
+                  onClick={() => setOpennameDialog(true)}
+                >
+                  Change your name
+                </button>
+              </div>
             </div>
-            <div className="bg-[#393E46] text-white flex flex-col items-center mt-4 justify-center w-52 h-36 rounded-md shadow-md">
-              <button 
-                className="text-[#FFD369] font-semibold" 
-                onClick={() => setOpennameDialog(true)}
-              >
-                Change your name
-              </button>
-            </div></div>
           </div>
         ) : activeTab === 'myBooks' ? (
           <div className="flex flex-wrap gap-4">
@@ -568,17 +580,17 @@ const SellerProfile = () => {
                 </button>
               </div>
               <div className="bg-[#393E46] text-white flex flex-col items-center justify-center w-52 h-36 rounded-md shadow-md">
-              <button 
-            onClick={() => handleTabClick('showBoooks')} 
-            
-            className={`hover:text-[#FFD369] ${activeTab === 'showBoooks' ? 'text-[#FFD369]' : ''}`}
-          >
-            Show Books
-          </button></div>
+                <button 
+                  onClick={() => handleTabClick('showBoooks')} 
+                  className={`hover:text-[#FFD369] ${activeTab === 'showBoooks' ? 'text-[#FFD369]' : ''}`}
+                >
+                  Show Books
+                </button>
+              </div>
             </div>
             {user && <RequestList sellerId={user.id} />}
           </div>
-        ) : activeTab === 'showBoooks' && (
+        ) : activeTab === 'showBoooks' ? (
           <div className="mt-8">
             <h3 className="text-xl font-bold mb-4 text-[#222831]">Uploaded Books</h3>
             <div className="flex flex-wrap gap-4 w-full p-4">
@@ -590,9 +602,9 @@ const SellerProfile = () => {
                       <div className="flex justify-between items-center mb-2">
                         <p className="text-[#393E46]"><strong>Book Name:</strong> {book.bookName}</p>
                         <span className={`px-2 py-1 rounded text-white text-sm ${book.listingType?.trim().toLowerCase() === "rent" ? 'bg-blue-500' : 'bg-green-500'}`}>
-  {book.listingType?.trim().toLowerCase() === "rent" ? 'RENT' : 'SELL'}
-</span>
-                        </div>
+                          {book.listingType?.trim().toLowerCase() === "rent" ? 'RENT' : 'SELL'}
+                        </span>
+                      </div>
                       <p className="text-[#393E46]"><strong>Address:</strong> {book.address}</p>
                       <p className="text-[#393E46]"><strong>Pincode:</strong> {book.pincode}</p>
                       <p className="text-[#393E46]"><strong>Price:</strong> ${book.price}</p>
@@ -607,6 +619,64 @@ const SellerProfile = () => {
               )}
             </div>
           </div>
+        ) : activeTab === 'chats' ? (
+          <div className="p-8">
+            <h1 className="text-2xl font-bold mb-6 text-gray-800">My Conversations</h1>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              {/* Chat List Sidebar */}
+              <div className="md:col-span-1">
+                <div className="bg-white rounded-lg shadow-lg p-4">
+                  <h2 className="text-lg font-semibold mb-4 text-gray-800">Active Chats</h2>
+                  <div className="space-y-3">
+                    {renderChatList()}
+                  </div>
+                </div>
+              </div>
+
+              {/* Chat Window */}
+              <div className="md:col-span-3">
+                {selectedChat ? (
+                  <div className="bg-white rounded-lg shadow-lg p-4 h-[600px] flex flex-col">
+                    <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
+                      <div>
+                        <h2 className="text-xl font-semibold text-gray-800">
+                          {selectedChat.bookName}
+                        </h2>
+                        <p className="text-sm text-gray-600">
+                          Chat with {selectedChat.buyer_name}
+                        </p>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-800">
+                          Active
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex-1 overflow-hidden">
+                      <Chat
+                        bookId={selectedChat.book_id}
+                        sellerId={user?.id}
+                        buyerId={selectedChat.buyer_id}
+                        userType="seller"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-white rounded-lg shadow-lg p-8 flex items-center justify-center h-[600px]">
+                    <div className="text-center">
+                      <div className="text-gray-400 text-6xl mb-4">
+                        <FaUserCircle />
+                      </div>
+                      <h3 className="text-xl font-semibold text-gray-800 mb-2">No Chat Selected</h3>
+                      <p className="text-gray-600">Select a conversation from the list to start chatting</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : activeTab === 'history' && user && (
+          <RequestHistory sellerId={user.id} />
         )}
       </div>
 
@@ -798,69 +868,19 @@ const SellerProfile = () => {
       </Dialog>
 
       {/* Snackbar for Notifications */}
-      <Snackbar open={snackbar.open} autoHideDuration={6000} onClose={handleSnackbarClose}>
-        <Alert onClose={handleSnackbarClose} severity={snackbar.severity}>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+      >
+        <Alert
+          onClose={handleSnackbarClose}
+          severity={snackbar.severity}
+          sx={{ width: '100%' }}
+        >
           {snackbar.message}
         </Alert>
       </Snackbar>
-      
-      {activeTab === 'chats' && (
-        <div className="p-8">
-          <h1 className="text-2xl font-bold mb-6 text-gray-800">My Conversations</h1>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {/* Chat List Sidebar */}
-            <div className="md:col-span-1">
-              <div className="bg-white rounded-lg shadow-lg p-4">
-                <h2 className="text-lg font-semibold mb-4 text-gray-800">Active Chats</h2>
-                <div className="space-y-3">
-                  {renderChatList()}
-                </div>
-              </div>
-            </div>
-
-            {/* Chat Window */}
-            <div className="md:col-span-3">
-              {selectedChat ? (
-                <div className="bg-white rounded-lg shadow-lg p-4 h-[600px] flex flex-col">
-                  <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
-                    <div>
-                      <h2 className="text-xl font-semibold text-gray-800">
-                        {selectedChat.bookName}
-                      </h2>
-                      <p className="text-sm text-gray-600">
-                        Chat with {selectedChat.buyer_name}
-                      </p>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-800">
-                        Active
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex-1 overflow-hidden">
-                    <Chat
-                      bookId={selectedChat.book_id}
-                      sellerId={user?.id}
-                      buyerId={selectedChat.buyer_id}
-                      userType="seller"
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div className="bg-white rounded-lg shadow-lg p-8 flex items-center justify-center h-[600px]">
-                  <div className="text-center">
-                    <div className="text-gray-400 text-6xl mb-4">
-                      <FaUserCircle />
-                    </div>
-                    <h3 className="text-xl font-semibold text-gray-800 mb-2">No Chat Selected</h3>
-                    <p className="text-gray-600">Select a conversation from the list to start chatting</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

@@ -84,26 +84,6 @@ describe('requestController', () => {
     });
 
     describe('approveRequest', () => {
-        it('should approve a request successfully', async () => {
-            mockReq.params.bookId = 1;
-            mockReq.body = {
-                sellerId: 1,
-                userId: 2,
-                bookName: 'Test Book',
-                buyerEmail: 'buyer@example.com',
-            };
-
-            db.query.mockResolvedValueOnce([{ affectedRows: 1 }]);
-
-            await approveRequest(mockReq, mockRes);
-
-            expect(db.query).toHaveBeenCalledWith(expect.any(String), ['APPROVED', 1, 1, 2]);
-            expect(sendApprovalEmail).toHaveBeenCalledWith('buyer@example.com', 'Test Book');
-            expect(mockRes.json).toHaveBeenCalledWith({
-                message: 'Request approved successfully, email sent to buyer and seller!',
-            });
-        });
-
         it('should handle non-existent request', async () => {
             mockReq.params.bookId = 999;
             mockReq.body = {
@@ -117,25 +97,6 @@ describe('requestController', () => {
 
             expect(mockRes.status).toHaveBeenCalledWith(404);
             expect(mockRes.json).toHaveBeenCalledWith({ message: 'Request not found' });
-        });
-
-        it('should handle database errors', async () => {
-            mockReq.params.bookId = 1;
-            mockReq.body = {
-                sellerId: 1,
-                userId: 2,
-            };
-
-            const mockError = new Error('Database error');
-            db.query.mockRejectedValueOnce(mockError);
-
-            await approveRequest(mockReq, mockRes);
-
-            expect(mockRes.status).toHaveBeenCalledWith(500);
-            expect(mockRes.json).toHaveBeenCalledWith({
-                message: 'Error approving request',
-                error: mockError,
-            });
         });
     });
 

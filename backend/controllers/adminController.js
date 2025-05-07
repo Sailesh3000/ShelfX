@@ -26,4 +26,19 @@ export const adminStatus = async (req, res) => {
     }
 };
 
+export const adminLogout = async (req, res) => {
+    try {
+        req.session.destroy((err) => {
+            if (err) {
+                return res.status(500).json({ message: "Error logging out" });
+            }
+            res.clearCookie('connect.sid');
+            res.json({ message: "Logged out successfully" });
+        });
+    } catch (err) {
+        console.error("Error in admin logout:", err);
+        res.status(500).send("Server error");
+    }
+};
+
 

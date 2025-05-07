@@ -243,18 +243,48 @@ describe('Buyer Controller Tests', () => {
         sellerId: 3
       };
       
-      db.query.mockResolvedValue([]);
+      // Mock the check for existing request
+      db.query.mockResolvedValueOnce([[]]); // No existing request
+      // Mock the insert query
+      db.query.mockResolvedValueOnce([]); // Successful insert
       
       // Act
       await postRequest(req, res);
       
       // Assert
       expect(db.query).toHaveBeenCalledWith(
+        "SELECT * FROM request WHERE userId = ? AND bookId = ? AND sellerId = ?",
+        [1, 2, 3]
+      );
+      expect(db.query).toHaveBeenCalledWith(
         "INSERT INTO request (userId, bookId, sellerId) VALUES (?, ?, ?)",
         [1, 2, 3]
       );
       expect(res.status).toHaveBeenCalledWith(201);
-      expect(res.send).toHaveBeenCalledWith('Request created successfully');
+      expect(res.json).toHaveBeenCalledWith({ message: "Request created successfully" });
+    });
+
+    it('should return 400 if request already exists', async () => {
+      // Arrange
+      req.session.userId = 1;
+      req.body = {
+        bookId: 2,
+        sellerId: 3
+      };
+      
+      // Mock existing request
+      db.query.mockResolvedValueOnce([[{ id: 1 }]]); // Existing request found
+      
+      // Act
+      await postRequest(req, res);
+      
+      // Assert
+      expect(db.query).toHaveBeenCalledWith(
+        "SELECT * FROM request WHERE userId = ? AND bookId = ? AND sellerId = ?",
+        [1, 2, 3]
+      );
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ message: "You have already requested this book" });
     });
     
     it('should return 401 if user is not authenticated', async () => {
@@ -270,7 +300,7 @@ describe('Buyer Controller Tests', () => {
       
       // Assert
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.send).toHaveBeenCalledWith('User not authenticated');
+      expect(res.send).toHaveBeenCalledWith("User not authenticated");
     });
   });
 

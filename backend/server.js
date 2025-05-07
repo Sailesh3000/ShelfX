@@ -1,5 +1,6 @@
 import { initializeSocket } from './socket.js';
 import redis from './config/redis.js';
+import historyRoutes from './routes/historyRoutes.js';
 
 const server = app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
@@ -7,6 +8,9 @@ const server = app.listen(port, () => {
 
 // Initialize Socket.IO
 initializeSocket(server);
+
+// Routes
+app.use('/api/history', historyRoutes);
 
 // Handle graceful shutdown
 const gracefulShutdown = async (signal) => {

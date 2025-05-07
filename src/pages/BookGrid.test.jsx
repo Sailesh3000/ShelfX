@@ -4,6 +4,7 @@ import '@testing-library/jest-dom';
 import BookGrid from './BookGrid';
 import axios from 'axios';
 import { BrowserRouter } from 'react-router-dom';
+import { SocketProvider } from '../context/SocketContext';
 
 // Mock the modules
 jest.mock('axios');
@@ -13,6 +14,29 @@ jest.mock('react-router-dom', () => ({
 }));
 jest.mock('bcryptjs', () => ({
   compare: jest.fn().mockResolvedValue(true)
+}));
+
+// Mock socket context
+const mockSocket = {
+  on: jest.fn(),
+  off: jest.fn(),
+  emit: jest.fn(),
+  connect: jest.fn(),
+  disconnect: jest.fn()
+};
+
+const mockUnreadCounts = {
+  '1': 2,
+  '2': 1
+};
+
+jest.mock('../context/SocketContext', () => ({
+  useSocket: () => ({
+    socket: mockSocket,
+    unreadCounts: mockUnreadCounts,
+    isConnected: true
+  }),
+  SocketProvider: ({ children }) => children
 }));
 
 describe('BookGrid Component', () => {
@@ -69,7 +93,8 @@ describe('BookGrid Component', () => {
   };
 
   beforeEach(() => {
-    // Mock the authentication check
+    jest.clearAllMocks();
+    
     axios.get.mockImplementation((url) => {
       if (url === 'http://localhost:5000/check-auth') {
         return Promise.resolve({ data: { authenticated: true } });
@@ -83,7 +108,6 @@ describe('BookGrid Component', () => {
       return Promise.reject(new Error('Not found'));
     });
 
-    // Mock implementation for useEffect to avoid act warnings
     jest.spyOn(React, 'useEffect').mockImplementation(f => f());
   });
 
@@ -91,22 +115,23 @@ describe('BookGrid Component', () => {
     jest.clearAllMocks();
   });
 
-  test('renders the component with books', async () => {
+  const renderWithProviders = (component) => {
+    return render(
+      <BrowserRouter>
+        <SocketProvider>
+          {component}
+        </SocketProvider>
+      </BrowserRouter>
+    );
+  };
+
+  test('renders the component with books and user info', async () => {
     await act(async () => {
-      render(
-        <BrowserRouter>
-          <BookGrid />
-        </BrowserRouter>
-      );
+      renderWithProviders(<BookGrid />);
     });
 
-    // Wait for user and books to load
     await waitFor(() => {
       expect(screen.getByText('testuser')).toBeInTheDocument();
-    });
-
-    // Check if books are rendered
-    await waitFor(() => {
       expect(screen.getByText('Test Book 1')).toBeInTheDocument();
       expect(screen.getByText('Test Book 2')).toBeInTheDocument();
     });
@@ -114,240 +139,158 @@ describe('BookGrid Component', () => {
 
   test('handles search functionality', async () => {
     await act(async () => {
-      render(
-        <BrowserRouter>
-          <BookGrid />
-        </BrowserRouter>
-      );
+      renderWithProviders(<BookGrid />);
     });
 
-    // Wait for books to load
     await waitFor(() => {
       expect(screen.getByText('Test Book 1')).toBeInTheDocument();
     });
 
-    // Type in search box
-    await act(async () => {
-      const searchInput = screen.getByPlaceholderText('Search by book name...');
-      fireEvent.change(searchInput, { target: { value: 'Test Book 1' } });
-    });
+    const searchInput = screen.getByPlaceholderText('Search by book name...');
+    fireEvent.change(searchInput, { target: { value: 'Test Book 1' } });
 
-    // Check that only the searched book is shown
     await waitFor(() => {
       expect(screen.getByText('Test Book 1')).toBeInTheDocument();
       expect(screen.queryByText('Test Book 2')).not.toBeInTheDocument();
     });
   });
 
-  test('switches to requested tab', async () => {
+  test('displays unread message count', async () => {
     await act(async () => {
-      render(
-        <BrowserRouter>
-          <BookGrid />
-        </BrowserRouter>
-      );
+      renderWithProviders(<BookGrid />);
     });
 
-    // Wait for the component to load
     await waitFor(() => {
-      expect(screen.getByText('Books')).toBeInTheDocument();
-    });
-
-    // Click on the Requested tab
-    await act(async () => {
-      fireEvent.click(screen.getByText('Requested'));
-    });
-
-    // Check if the requested tab content is displayed
-    await waitFor(() => {
-      expect(screen.getByText('History')).toBeInTheDocument();
-      expect(screen.getByText('Change your password')).toBeInTheDocument();
-      expect(screen.getByText('Change your name')).toBeInTheDocument();
+      expect(screen.getByText('3 unread messages')).toBeInTheDocument();
     });
   });
 
-  test('opens book details modal when See Details is clicked', async () => {
+  test('handles book details modal', async () => {
     await act(async () => {
-      render(
-        <BrowserRouter>
-          <BookGrid />
-        </BrowserRouter>
-      );
+      renderWithProviders(<BookGrid />);
     });
 
-    // Wait for books to load
-    await waitFor(() => {
-      expect(screen.getAllByText('See Details')[0]).toBeInTheDocument();
-    });
-
-    // Click on See Details button
-    await act(async () => {
-      fireEvent.click(screen.getAllByText('See Details')[0]);
-    });
-
-    // Check if the modal opens with seller details
-    await waitFor(() => {
-      expect(screen.getByText('Seller Details')).toBeInTheDocument();
-      expect(screen.getByText('Buy Now')).toBeInTheDocument();
-    });
-  });
-
-  test('opens change password dialog', async () => {
-    await act(async () => {
-      render(
-        <BrowserRouter>
-          <BookGrid />
-        </BrowserRouter>
-      );
-    });
-
-    // Wait for component to load and switch to requested tab
-    await waitFor(() => {
-      expect(screen.getByText('Books')).toBeInTheDocument();
-    });
-    
-    await act(async () => {
-      fireEvent.click(screen.getByText('Requested'));
-    });
-
-    // Wait for the requested tab to load
-    await waitFor(() => {
-      expect(screen.getByText('Change your password')).toBeInTheDocument();
-    });
-
-    // Click on change password button
-    await act(async () => {
-      fireEvent.click(screen.getByText('Change your password'));
-    });
-
-    // Check if the dialog opens
-    await waitFor(() => {
-      expect(screen.getByText('Change Your Password')).toBeInTheDocument();
-      expect(screen.getByLabelText('Current Password')).toBeInTheDocument();
-      expect(screen.getByLabelText('New Password')).toBeInTheDocument();
-      expect(screen.getByLabelText('Confirm Password')).toBeInTheDocument();
-    });
-  });
-
-  test('opens change name dialog', async () => {
-    await act(async () => {
-      render(
-        <BrowserRouter>
-          <BookGrid />
-        </BrowserRouter>
-      );
-    });
-
-    // Wait for component to load and switch to requested tab
-    await waitFor(() => {
-      expect(screen.getByText('Books')).toBeInTheDocument();
-    });
-    
-    await act(async () => {
-      fireEvent.click(screen.getByText('Requested'));
-    });
-
-    // Wait for the requested tab to load
-    await waitFor(() => {
-      expect(screen.getByText('Change your name')).toBeInTheDocument();
-    });
-
-    // Click on change name button
-    await act(async () => {
-      fireEvent.click(screen.getByText('Change your name'));
-    });
-
-    // Check if the dialog opens
-    await waitFor(() => {
-      expect(screen.getByText('Change Your Name')).toBeInTheDocument();
-      expect(screen.getByLabelText('Current Password')).toBeInTheDocument();
-      expect(screen.getByLabelText('Username')).toBeInTheDocument();
-    });
-  });
-
-  test('toggles favorites when heart icon is clicked', async () => {
-    await act(async () => {
-      render(
-        <BrowserRouter>
-          <BookGrid />
-        </BrowserRouter>
-      );
-    });
-
-    // Wait for books to load
     await waitFor(() => {
       expect(screen.getByText('Test Book 1')).toBeInTheDocument();
     });
 
-    // Find the heart icon (this might need adjustment based on your actual render)
+    const seeDetailsButton = screen.getAllByText('See Details')[0];
+    fireEvent.click(seeDetailsButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('Seller Details')).toBeInTheDocument();
+      expect(screen.getByText('Seller User')).toBeInTheDocument();
+      expect(screen.getByText('seller@example.com')).toBeInTheDocument();
+    });
+  });
+
+  test('handles buy request', async () => {
+    axios.post.mockResolvedValueOnce({ data: { message: 'Request sent successfully' } });
+
     await act(async () => {
-      const heartIcons = document.querySelectorAll('.text-red-500');
-      fireEvent.click(heartIcons[0]);
+      renderWithProviders(<BookGrid />);
     });
 
-    // Since we're testing a state change, there's no visible change to assert
-    // We're just ensuring the click doesn't cause errors
+    await waitFor(() => {
+      expect(screen.getByText('Test Book 1')).toBeInTheDocument();
+    });
+
+    const seeDetailsButton = screen.getAllByText('See Details')[0];
+    fireEvent.click(seeDetailsButton);
+
+    await waitFor(() => {
+      const buyButton = screen.getByText('Buy');
+      fireEvent.click(buyButton);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Confirm Buy Request')).toBeInTheDocument();
+      const confirmButton = screen.getByText('Confirm');
+      fireEvent.click(confirmButton);
+    });
+
+    expect(axios.post).toHaveBeenCalledWith(
+      'http://localhost:5000/request',
+      expect.any(Object),
+      { withCredentials: true }
+    );
   });
 
   test('handles sort by pincode', async () => {
     await act(async () => {
-      render(
-        <BrowserRouter>
-          <BookGrid />
-        </BrowserRouter>
-      );
+      renderWithProviders(<BookGrid />);
     });
 
-    // Wait for books to load
     await waitFor(() => {
       expect(screen.getByText('Sort by Nearest')).toBeInTheDocument();
     });
 
-    // Click on Sort by Nearest button
-    await act(async () => {
-      fireEvent.click(screen.getByText('Sort by Nearest'));
-    });
+    const sortButton = screen.getByText('Sort by Nearest');
+    fireEvent.click(sortButton);
 
-    // After sorting, the button text should change
     expect(screen.getByText('Clear Sorting')).toBeInTheDocument();
+  });
 
-    // Click again to clear sorting
+  test('displays request history', async () => {
     await act(async () => {
-      fireEvent.click(screen.getByText('Clear Sorting'));
+      renderWithProviders(<BookGrid />);
     });
-    
-    // Button text should change back
-    expect(screen.getByText('Sort by Nearest')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('Browse Books')).toBeInTheDocument();
+    });
+
+    const myRequestsButton = screen.getByText('My Requests');
+    fireEvent.click(myRequestsButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('Test Book 1')).toBeInTheDocument();
+      expect(screen.getByText('APPROVED')).toBeInTheDocument();
+      expect(screen.getByText('Test Book 2')).toBeInTheDocument();
+      expect(screen.getByText('REJECTED')).toBeInTheDocument();
+    });
   });
 
   test('handles logout', async () => {
     axios.post.mockResolvedValueOnce({ status: 200 });
 
     await act(async () => {
-      render(
-        <BrowserRouter>
-          <BookGrid />
-        </BrowserRouter>
-      );
+      renderWithProviders(<BookGrid />);
     });
 
-    // Wait for user to load
     await waitFor(() => {
       expect(screen.getByText('Logout')).toBeInTheDocument();
     });
 
-    // Click logout button
+    const logoutButton = screen.getByText('Logout');
+    fireEvent.click(logoutButton);
+
+    expect(axios.post).toHaveBeenCalledWith(
+      'http://localhost:5000/logout',
+      {},
+      { withCredentials: true }
+    );
+  });
+
+  test('handles chat functionality', async () => {
     await act(async () => {
-      fireEvent.click(screen.getByText('Logout'));
+      renderWithProviders(<BookGrid />);
     });
 
-    // Verify axios was called with the correct URL
     await waitFor(() => {
-      expect(axios.post).toHaveBeenCalledWith(
-        'http://localhost:5000/logout',
-        {},
-        { withCredentials: true }
-      );
+      expect(screen.getByText('Test Book 1')).toBeInTheDocument();
+    });
+
+    const seeDetailsButton = screen.getAllByText('See Details')[0];
+    fireEvent.click(seeDetailsButton);
+
+    await waitFor(() => {
+      const showChatButton = screen.getByText('Show Chat');
+      fireEvent.click(showChatButton);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Hide Chat')).toBeInTheDocument();
     });
   });
 });
