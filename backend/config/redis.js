@@ -35,8 +35,10 @@ if (!isTestEnvironment && redisClient) {
 // Cache middleware function with performance measurement
 export const cacheMiddleware = (duration = 3600) => {
   return async (req, res, next) => {
-    // Skip caching in test environment or for non-GET requests
-    if (isTestEnvironment || req.method !== 'GET') {
+    // Skip caching for unread counts endpoints and non-GET requests
+    if (isTestEnvironment || 
+        req.method !== 'GET' || 
+        req.path.includes('/unread-counts/')) {
       return next();
     }
 
@@ -116,19 +118,62 @@ export const clearCache = async (pattern) => {
   }
 };
 
+// Export both default and named export
+export const redis = redisClient;
 export default redisClient;
 
 // Add shutdown listener to clear cache on application stop
 if (!isTestEnvironment) {
-  process.on('SIGINT', async () => {
-    console.log('SIGINT received: Clearing cache and shutting down.');
-    await clearCache();
-    process.exit(0);
+  const handleShutdown = async (signal) => {
+    console.log(`\n[SHUTDOWN] ${signal} received at ${new Date().toISOString()}`);
+    console.log('[SHUTDOWN] Starting graceful shutdown process...');
+    
+    try {
+      // Ensure Redis is connected
+      if (!redisClient.isOpen) {
+        console.log('[SHUTDOWN] Connecting to Redis...');
+        await redisClient.connect();
+      }
+
+      // Clear all cache
+      console.log('[SHUTDOWN] Clearing Redis cache...');
+      await redisClient.flushAll();
+      console.log('[SHUTDOWN] Redis cache cleared successfully');
+
+      // Close Redis connection
+      console.log('[SHUTDOWN] Closing Redis connection...');
+      await redisClient.quit();
+      console.log('[SHUTDOWN] Redis connection closed');
+
+      console.log('[SHUTDOWN] Graceful shutdown completed successfully');
+    } catch (error) {
+      console.error('[SHUTDOWN] Error during shutdown:', error);
+    } finally {
+      // Force exit after 5 seconds if not already exited
+      setTimeout(() => {
+        console.log('[SHUTDOWN] Forcing exit after timeout');
+        process.exit(0);
+      }, 5000);
+    }
+  };
+
+  // Handle various shutdown signals
+  process.on('SIGTERM', () => {
+    console.log('[SIGNAL] SIGTERM received');
+    handleShutdown('SIGTERM');
   });
 
-  process.on('SIGTERM', async () => {
-    console.log('SIGTERM received: Clearing cache and shutting down.');
-    await clearCache();
-    process.exit(0);
+  process.on('SIGINT', () => {
+    console.log('[SIGNAL] SIGINT received');
+    handleShutdown('SIGINT');
+  });
+
+  // Prevent immediate exit on SIGTERM/SIGINT
+  process.on('SIGTERM', () => {
+    console.log('[SIGNAL] Preventing immediate exit');
+  });
+
+  process.on('SIGINT', () => {
+    console.log('[SIGNAL] Preventing immediate exit');
   });
 }

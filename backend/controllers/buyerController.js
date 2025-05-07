@@ -239,3 +239,21 @@ export const getBookStatus = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+export const getBuyerById = async (req, res) => {
+  const { id } = req.params;
+  
+  try {
+    const sql = "SELECT id, username, email FROM buyers WHERE id = ?";
+    const [rows] = await db.query(sql, [id]);
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "Buyer not found" });
+    }
+    
+    res.status(200).json({ user: rows[0] });
+  } catch (err) {
+    console.error("Error fetching buyer details:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};

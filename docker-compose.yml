@@ -25,6 +25,15 @@ services:
       - ./backend/tmp:/app/tmp
     networks:
       - shelfx-network
+    # Add signal handling configuration
+    stop_grace_period: 1m
+    stop_signal: SIGTERM
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     # No longer depends on local Redis service
 
   # Redis service removed - using Upstash Redis instead

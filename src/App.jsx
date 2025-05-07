@@ -8,22 +8,25 @@ import SellerProfile from './pages/SellerDashBoard';
 import Subscription from './pages/Subscription';
 import AdminLogin from './components/AdminLogin';
 import AdminDashboard from './components/AdminDashboard';
+import { SocketProvider } from './context/SocketContext';
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login-seller" element={<SellerAuth />} />
-        <Route path="/login-Buyer" element={<BuyerAuth />} />
-        <Route path="/seller-xyz" element={<SellerProfile />} />
-        <Route path="/subscription" element={<Subscription />} />
-        <Route path="/BookGrid" element={<BookGrid />} />
-        <Route path="/adminLogin" element={<AdminLogin />} />
-        <Route path="/adminDashboard" element={<AdminDashboard />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </Router>
+    <SocketProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login-seller" element={<SellerAuth />} />
+          <Route path="/login-Buyer" element={<BuyerAuth />} />
+          <Route path="/seller-xyz" element={<SellerProfile />} />
+          <Route path="/subscription" element={<Subscription />} />
+          <Route path="/BookGrid" element={<BookGrid />} />
+          <Route path="/adminLogin" element={<AdminLogin />} />
+          <Route path="/adminDashboard" element={<AdminDashboard />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Router>
+    </SocketProvider>
   );
 }
 

@@ -143,12 +143,21 @@ const Chat = ({ bookId, sellerId, buyerId, userType }) => {
         });
 
         // Get user details based on userType
-        const userIdToFetch = userType === 'buyer' ? sellerId : buyerId;
-        const endpoint = userType === 'buyer' ? 'sellerdetails' : 'buyer';
+        // If current user is seller, we need buyer details and vice versa
+        const userIdToFetch = userType === 'seller' ? buyerId : sellerId;
+        const userTypeToFetch = userType === 'seller' ? 'buyer' : 'seller';
         
-        const userResponse = await axios.get(`${API_BASE_URL}/${endpoint}/${userIdToFetch}`, {
-          withCredentials: true
+        console.log('Fetching user details:', {
+          userIdToFetch,
+          userTypeToFetch
         });
+
+        const userResponse = await axios.get(
+          `${API_BASE_URL}/api/chat/user-details/${userIdToFetch}/${userTypeToFetch}`,
+          {
+            withCredentials: true
+          }
+        );
         console.log('User details response:', userResponse.data);
         
         const userData = userResponse.data.user;
@@ -168,17 +177,12 @@ const Chat = ({ bookId, sellerId, buyerId, userType }) => {
         );
         console.log('Chat initialization response:', response.data);
         
-        // Only set chat room ID if there are messages
-        if (response.data.messages && response.data.messages.length > 0) {
-          setChatRoomId(response.data.chatId);
-          setMessages(response.data.messages);
-          
-          // Join the chat room
-          if (socketRef.current) {
-            socketRef.current.emit('joinChat', response.data.chatId);
-          }
-        } else {
-          setError('No messages in this chat room yet.');
+        setChatRoomId(response.data.chatId);
+        setMessages(response.data.messages || []);
+        
+        // Join the chat room
+        if (socketRef.current) {
+          socketRef.current.emit('joinChat', response.data.chatId);
         }
 
         setError(null);
@@ -200,7 +204,7 @@ const Chat = ({ bookId, sellerId, buyerId, userType }) => {
     try {
       const messageData = {
         chatRoomId,
-        message: newMessage.trim(),
+        content: newMessage.trim(),
         senderId: currentUserId,
         buyerId,
         sellerId,

@@ -8,7 +8,7 @@ import Chat from '../components/Chat';
 import bcrypt from 'bcryptjs';
 import io from 'socket.io-client';
 
-const API_BASE_URL = 'http://localhost:5000';
+const API_BASE_URL = 'http://localhost:5000/api';
 const SOCKET_URL = 'http://localhost:5000';
 
 const SellerProfile = () => {
@@ -53,6 +53,13 @@ const SellerProfile = () => {
   useEffect(() => {
     checkAuthentication();
   }, []);
+
+  // Fetch active chats when user is loaded
+  useEffect(() => {
+    if (user && user.id) {
+      fetchActiveChats();
+    }
+  }, [user]);
 
   // Function to check if user is authenticated
   const checkAuthentication = async () => {
@@ -385,17 +392,20 @@ const SellerProfile = () => {
 
   const fetchActiveChats = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/chat/user/${user.id}/seller`, {
+      if (!user || !user.id) return;
+      
+      const response = await axios.get(`${API_BASE_URL}/chat/seller/${user.id}/active`, {
         withCredentials: true
       });
-      console.log('Active chats response:', response.data);
       
-      // Filter out chats with no messages
-      const activeChats = response.data.filter(chat => chat.message_count > 0);
-      setActiveChats(activeChats);
+      setActiveChats(response.data);
     } catch (error) {
       console.error('Error fetching active chats:', error);
-      setActiveChats([]);
+      setSnackbar({
+        open: true,
+        message: 'Failed to fetch active chats',
+        severity: 'error'
+      });
     }
   };
 
@@ -426,62 +436,42 @@ const SellerProfile = () => {
   }, [user?.id]);
 
   const renderChatList = () => {
-    if (selectedChat) {
+    if (!activeChats.length) {
       return (
-        <div className="bg-[#393e46] rounded-lg p-4">
-          <Chat
-            bookId={selectedChat.bookId}
-            sellerId={user.id}
-            buyerId={selectedChat.buyerId}
-            userType="seller"
-          />
-          <button
-            onClick={() => setSelectedChat(null)}
-            className="mt-4 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-          >
-            Back to Chats
-          </button>
-        </div>
-      );
-    }
-
-    if (activeChats.length === 0) {
-      return (
-        <div className="text-center py-8 bg-white rounded-lg shadow">
-          <div className="text-[#FFD369] text-4xl mb-3">
-            <FaUserCircle />
-          </div>
-          <p className="text-gray-600">No active conversations yet</p>
-          <p className="text-sm text-gray-500 mt-2">Chats will appear here when buyers message you</p>
+        <div className="text-center p-4">
+          <p className="text-gray-500">No active chats</p>
         </div>
       );
     }
 
     return (
-      <div className="space-y-4">
+      <div className="space-y-2">
         {activeChats.map((chat) => (
-          <div key={chat.id} className="bg-white p-4 rounded-lg shadow">
-            <div className="flex justify-between items-center">
-              <div>
-                <h3 className="text-lg font-semibold">{chat.bookName}</h3>
-                <p className="text-gray-600">Price: ${chat.price}</p>
-                <p className="text-sm text-gray-500">Chat with: {chat.other_user_name}</p>
+          <div
+            key={chat.id}
+            className={`p-4 rounded-lg cursor-pointer transition-all duration-200 ${
+              selectedChat?.id === chat.id 
+                ? 'bg-blue-50 border border-blue-200' 
+                : 'bg-gray-50 hover:bg-gray-100 border border-gray-200'
+            }`}
+            onClick={() => setSelectedChat(chat)}
+          >
+            <div className="flex justify-between items-start">
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-gray-800 truncate">{chat.bookName}</h3>
+                <p className="text-sm text-gray-600 truncate">Buyer: {chat.buyer_name}</p>
+                <p className="text-sm text-gray-500 truncate mt-1">{chat.last_message}</p>
+              </div>
+              <div className="ml-4 flex flex-col items-end">
+                <p className="text-xs text-gray-500 whitespace-nowrap">
+                  {new Date(chat.last_message_time).toLocaleDateString()}
+                </p>
                 {chat.unread_count > 0 && (
-                  <span className="inline-block px-2 py-1 text-xs font-semibold text-white bg-red-500 rounded-full">
-                    {chat.unread_count} new messages
+                  <span className="mt-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-y-1/2 bg-blue-500 rounded-full">
+                    {chat.unread_count}
                   </span>
                 )}
-                <p className="text-sm text-gray-500">Messages: {chat.message_count}</p>
               </div>
-              <button
-                onClick={() => setSelectedChat({
-                  bookId: chat.book_id,
-                  buyerId: chat.buyer_id
-                })}
-                className="px-4 py-2 bg-[#FFD369] text-[#222831] rounded hover:bg-[#e6bd5f]"
-              >
-                View Chat
-              </button>
             </div>
           </div>
         ))}
@@ -815,12 +805,12 @@ const SellerProfile = () => {
       
       {activeTab === 'chats' && (
         <div className="p-8">
-          <h1 className="text-2xl font-bold mb-6 text-[#222831]">My Conversations</h1>
+          <h1 className="text-2xl font-bold mb-6 text-gray-800">My Conversations</h1>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {/* Chat List Sidebar */}
             <div className="md:col-span-1">
-              <div className="bg-[#222831] rounded-lg shadow-lg p-4">
-                <h2 className="text-lg font-semibold mb-4 text-[#FFD369]">Active Chats</h2>
+              <div className="bg-white rounded-lg shadow-lg p-4">
+                <h2 className="text-lg font-semibold mb-4 text-gray-800">Active Chats</h2>
                 <div className="space-y-3">
                   {renderChatList()}
                 </div>
@@ -830,39 +820,39 @@ const SellerProfile = () => {
             {/* Chat Window */}
             <div className="md:col-span-3">
               {selectedChat ? (
-                <div className="bg-[#222831] rounded-lg shadow-lg p-4 h-[600px] flex flex-col">
-                  <div className="flex items-center justify-between mb-4 pb-4 border-b border-[#393E46]">
+                <div className="bg-white rounded-lg shadow-lg p-4 h-[600px] flex flex-col">
+                  <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
                     <div>
-                      <h2 className="text-xl font-semibold text-[#FFD369]">
-                        {uploadedImages.find(book => book.id === selectedChat.bookId)?.bookName}
+                      <h2 className="text-xl font-semibold text-gray-800">
+                        {selectedChat.bookName}
                       </h2>
-                      <p className="text-sm text-gray-400">
-                        {uploadedImages.find(book => book.id === selectedChat.bookId)?.listingType === "rent" ? "Rental" : "Sale"} Conversation
+                      <p className="text-sm text-gray-600">
+                        Chat with {selectedChat.buyer_name}
                       </p>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <span className="px-3 py-1 rounded-full text-sm font-semibold bg-[#393E46] text-[#FFD369]">
+                      <span className="px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-800">
                         Active
                       </span>
                     </div>
                   </div>
                   <div className="flex-1 overflow-hidden">
                     <Chat
-                      bookId={selectedChat.bookId}
+                      bookId={selectedChat.book_id}
                       sellerId={user?.id}
-                      buyerId={selectedChat.buyerId}
+                      buyerId={selectedChat.buyer_id}
                       userType="seller"
                     />
                   </div>
                 </div>
               ) : (
-                <div className="bg-[#222831] rounded-lg shadow-lg p-8 flex items-center justify-center h-[600px]">
+                <div className="bg-white rounded-lg shadow-lg p-8 flex items-center justify-center h-[600px]">
                   <div className="text-center">
-                    <div className="text-[#FFD369] text-6xl mb-4">
+                    <div className="text-gray-400 text-6xl mb-4">
                       <FaUserCircle />
                     </div>
-                    <h3 className="text-xl font-semibold text-[#FFD369] mb-2">No Chat Selected</h3>
-                    <p className="text-gray-400">Select a conversation from the list to start chatting</p>
+                    <h3 className="text-xl font-semibold text-gray-800 mb-2">No Chat Selected</h3>
+                    <p className="text-gray-600">Select a conversation from the list to start chatting</p>
                   </div>
                 </div>
               )}

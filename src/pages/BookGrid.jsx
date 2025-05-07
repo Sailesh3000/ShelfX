@@ -15,6 +15,7 @@ import {
 import axios from "axios";
 import bcrypt from 'bcryptjs';
 import Chat from '../components/Chat';
+import { useSocket } from '../context/SocketContext';
 
 
 const BookGrid = () => {
@@ -22,6 +23,9 @@ const BookGrid = () => {
   const [user, setUser] = useState(null);
   const [uploadedImages, setUploadedImages] = useState([]);
   const [favorites, setFavorites] = useState(new Set());
+  const [unreadMessages, setUnreadMessages] = useState({});
+  const [totalUnread, setTotalUnread] = useState(0);
+  const { socket, unreadCounts } = useSocket();
   
   const [openpassDialog, setOpenpassDialog] = useState(false);
   const [opennameDialog, setOpennameDialog] = useState(false);
@@ -54,6 +58,7 @@ const BookGrid = () => {
     confirmPassword: '',
   });
   const [showChat, setShowChat] = useState(false);
+  const [currentChatBookId, setCurrentChatBookId] = useState(null);
 
   // Initial authentication check
   useEffect(() => {
@@ -305,10 +310,27 @@ const BookGrid = () => {
     });
   };
 
+  const handleChatOpen = (bookId) => {
+    setShowChat(true);
+    setCurrentChatBookId(bookId);
+    // Clear notifications for this book
+    setUnreadMessages(prev => {
+      const newUnread = { ...prev };
+      delete newUnread[bookId];
+      return newUnread;
+    });
+    // Recalculate total unread
+    setTotalUnread(prev => {
+      const bookUnread = unreadMessages[bookId] || 0;
+      return prev - bookUnread;
+    });
+  };
+
   const handleSeeDetails = (book) => {
     setSelectedBook(book);
     setIsModalOpen(true);
     setShowChat(false);
+    setCurrentChatBookId(null);
     getUserDetails(book.userId);
     document.body.style.overflow = "hidden";
   };
@@ -317,6 +339,7 @@ const BookGrid = () => {
     setIsModalOpen(false);
     setSelectedBook(null);
     setShowChat(false);
+    setCurrentChatBookId(null);
     document.body.style.overflow = "auto";
   };
 
@@ -376,6 +399,35 @@ const BookGrid = () => {
       })
     : filteredBooks;
 
+  // Update unread messages when unreadCounts from socket context changes
+  useEffect(() => {
+    console.log('BookGrid: Unread counts from socket context:', unreadCounts);
+    console.log('BookGrid: Current books:', uploadedImages);
+    
+    if (unreadCounts && typeof unreadCounts === 'object') {
+      // Process unread counts to ensure all keys are numbers
+      const processedCounts = {};
+      Object.entries(unreadCounts).forEach(([bookId, count]) => {
+        const numericId = Number(bookId);
+        if (!isNaN(numericId)) {
+          processedCounts[numericId] = Number(count) || 0;
+        }
+      });
+      
+      console.log('BookGrid: Setting unread messages with:', processedCounts);
+      setUnreadMessages(processedCounts);
+      
+      // Calculate total unread
+      const total = Object.values(processedCounts).reduce((sum, count) => sum + count, 0);
+      console.log('BookGrid: Setting total unread to:', total);
+      setTotalUnread(total);
+    } else {
+      console.log('BookGrid: No valid unread counts to process');
+      setUnreadMessages({});
+      setTotalUnread(0);
+    }
+  }, [unreadCounts, uploadedImages]);
+
   const renderBookDetails = () => {
     if (!selectedBook) return null;
 
@@ -389,7 +441,7 @@ const BookGrid = () => {
             <p className="text-gray-600">Pincode: {selectedBook.pincode}</p>
           </div>
           <button
-            onClick={() => setShowChat(!showChat)}
+            onClick={() => handleChatOpen(selectedBook.id)}
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
             {showChat ? 'Hide Chat' : 'Show Chat'}
@@ -475,6 +527,21 @@ const BookGrid = () => {
       <div className="p-6">
         {activeTab === "myBooks" ? (
           <>
+            {/* Total unread messages indicator */}
+            {totalUnread > 0 && (
+              <div className="bg-[#222831] text-white p-4 rounded-lg shadow-lg mx-6 mb-6 flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="bg-red-500 rounded-full w-8 h-8 flex items-center justify-center">
+                    <span className="text-white font-bold">{totalUnread}</span>
+                  </div>
+                  <span className="text-lg font-semibold">
+                    {totalUnread === 1 ? '1 unread message' : `${totalUnread} unread messages`}
+                  </span>
+                </div>
+                <span className="text-sm text-gray-300">Click on a book to view messages</span>
+              </div>
+            )}
+
             {/* Search Input and Sort Button */}
             <div className="text-center mb-6">
               <input
@@ -493,56 +560,68 @@ const BookGrid = () => {
             </div>
 
             <div className="flex flex-wrap gap-4 w-full p-4">
-              {sortedBooks.length > 0 ? (
-                sortedBooks.map((book) => (
-                  <div
-                    key={book.id}
-                    className="bg-[#222831] p-4 border rounded-md shadow-md flex flex-col justify-between min-h-[350px] w-[250px] relative"
-                  >
-                    <span className={`absolute top-3 right-3 px-3 py-2 rounded-full text-sm font-bold text-white ${book.listingType?.trim().toLowerCase() === "rent" ? 'bg-blue-500' : 'bg-green-500'} shadow-lg z-10 border-2 ${book.listingType?.trim().toLowerCase() === "rent" ? 'border-blue-500' : 'border-green-500'}`}>
-                      {book.listingType?.trim().toLowerCase() === "rent" ? 'RENT' : 'SELL'}
-                    </span>
-                    <img
-                      src={book.imageUrl}
-                      alt={`Uploaded ${book.address}`}
-                      className="max-w-full max-h-[300px] object-cover rounded-md mb-2"
-                    />
-                    <div className="mt-2">
-                      <div className="mb-2">
+              {sortedBooks && sortedBooks.length > 0 ? (
+                sortedBooks.map((book) => {
+                  const bookId = Number(book.id);
+                  const unreadCount = unreadMessages[bookId] || 0;
+                  
+                  return (
+                    <div
+                      key={book.id}
+                      className="bg-[#222831] p-4 border rounded-md shadow-md flex flex-col justify-between min-h-[350px] w-[250px] relative"
+                    >
+                      {/* Unread message indicator */}
+                      {unreadCount > 0 && (
+                        <div className="absolute -top-2 -left-2 bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold z-20 shadow-lg border-2 border-white">
+                          {unreadCount}
+                        </div>
+                      )}
+                      
+                      <span className={`absolute top-3 right-3 px-3 py-2 rounded-full text-sm font-bold text-white ${book.listingType?.trim().toLowerCase() === "rent" ? 'bg-blue-500' : 'bg-green-500'} shadow-lg z-10 border-2 ${book.listingType?.trim().toLowerCase() === "rent" ? 'border-blue-500' : 'border-green-500'}`}>
+                        {book.listingType?.trim().toLowerCase() === "rent" ? 'RENT' : 'SELL'}
+                      </span>
+                      <img
+                        src={book.imageUrl}
+                        alt={`Uploaded ${book.address}`}
+                        className="max-w-full max-h-[300px] object-cover rounded-md mb-2"
+                      />
+                      <div className="mt-2">
+                        <div className="mb-2">
+                          <p className="text-[#EEEEEE]">
+                            <strong>Book Name:</strong> {book.bookName}
+                          </p>
+                        </div>
                         <p className="text-[#EEEEEE]">
-                          <strong>Book Name:</strong> {book.bookName}
+                          <strong>Price:</strong> Rs {book.price}
                         </p>
-                      </div>
-                      <p className="text-[#EEEEEE]">
-                        <strong>Price:</strong> Rs {book.price}
-                      </p>
-                      <div className="flex flex-col mt-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <button
-                            onClick={() => toggleFavorite(book.id)}
-                            className="text-red-500"
-                          >
-                            <FaHeart
-                              className={`${
-                                favorites.has(book.id)
-                                  ? "text-red-600"
-                                  : "text-gray-400"
-                              }`}
-                            />
-                          </button>
-                          <div className="flex items-center gap-2">
+                        <div className="flex flex-col mt-4">
+                          <div className="flex items-center justify-between mb-2">
                             <button
-                              onClick={() => handleSeeDetails(book)}
-                              className="bg-[#FFD369] text-black px-3 py-1 rounded-md hover:bg-[#e0c258]"
+                              onClick={() => toggleFavorite(book.id)}
+                              className="text-red-500"
                             >
-                              See Details
+                              <FaHeart
+                                className={`${
+                                  favorites.has(book.id)
+                                    ? "text-red-600"
+                                    : "text-gray-400"
+                                }`}
+                              />
                             </button>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => handleSeeDetails(book)}
+                                className="bg-[#FFD369] text-black px-3 py-1 rounded-md hover:bg-[#e0c258]"
+                              >
+                                See Details
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               ) : (
                 <p className="text-gray-500">No books uploaded yet.</p>
               )}
@@ -637,7 +716,7 @@ const BookGrid = () => {
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-xl font-semibold">Chat with Seller</h3>
                   <button
-                    onClick={() => setShowChat(!showChat)}
+                    onClick={() => handleChatOpen(selectedBook.id)}
                     className="px-4 py-2 bg-[#FFD369] text-black rounded hover:bg-[#e6bd5f] transition-colors"
                   >
                     {showChat ? 'Hide Chat' : 'Show Chat'}

@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS messages (
     chat_id INT NOT NULL,
     sender_id INT NOT NULL,
     content TEXT NOT NULL,
+    is_read BOOLEAN DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (chat_id) REFERENCES chats(id),
     FOREIGN KEY (sender_id) REFERENCES users(id)

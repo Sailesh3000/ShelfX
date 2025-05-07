@@ -10,7 +10,15 @@ class Chat {
       );
 
       if (existingChat.length > 0) {
-        return existingChat[0];
+        // Check if there are any messages
+        const [messages] = await db.query(
+          'SELECT * FROM messages WHERE chat_room_id = ?',
+          [existingChat[0].id]
+        );
+        
+        if (messages.length > 0) {
+          return existingChat[0];
+        }
       }
 
       // Create new chat room
@@ -21,6 +29,7 @@ class Chat {
 
       return { id: result.insertId, book_id: bookId, seller_id: sellerId, buyer_id: buyerId };
     } catch (error) {
+      console.error('Error in initializeChat:', error);
       throw error;
     }
   }
@@ -49,6 +58,10 @@ class Chat {
 
   static async addMessage(chatRoomId, content, senderId) {
     try {
+      if (!content || !chatRoomId || !senderId) {
+        throw new Error('Missing required message data');
+      }
+
       // First check if sender is a buyer or seller
       const [buyer] = await db.query('SELECT id FROM buyers WHERE id = ?', [senderId]);
       const [seller] = await db.query('SELECT id FROM users WHERE id = ?', [senderId]);
@@ -75,7 +88,8 @@ class Chat {
         throw new Error('Sender is not part of this chat room');
       }
 
-      // Insert new message
+      console.log('Adding new message with is_read = 0');
+      // Insert new message with explicit is_read = 0
       const [result] = await db.query(
         'INSERT INTO messages (chat_room_id, sender_id, message, is_read) VALUES (?, ?, ?, 0)',
         [chatRoomId, senderId, content]
@@ -96,6 +110,7 @@ class Chat {
         [result.insertId]
       );
 
+      console.log('New message added:', messages[0]);
       return messages[0];
     } catch (error) {
       console.error('Error handling message:', error);
@@ -105,11 +120,29 @@ class Chat {
 
   static async markMessagesAsRead(chatRoomId, userId) {
     try {
-      await db.query(
+      console.log(`Marking messages as read in chat ${chatRoomId} for user ${userId}`);
+      
+      // First verify the chat room exists
+      const [chatRoom] = await db.query(
+        'SELECT * FROM chat_rooms WHERE id = ?',
+        [chatRoomId]
+      );
+
+      if (!chatRoom.length) {
+        console.error('Chat room not found:', chatRoomId);
+        throw new Error('Chat room not found');
+      }
+
+      // Update messages to mark them as read
+      const [result] = await db.query(
         'UPDATE messages SET is_read = 1 WHERE chat_room_id = ? AND sender_id != ? AND is_read = 0',
         [chatRoomId, userId]
       );
+
+      console.log(`Marked ${result.affectedRows} messages as read`);
+      return result.affectedRows;
     } catch (error) {
+      console.error('Error in markMessagesAsRead:', error);
       throw error;
     }
   }
@@ -133,6 +166,105 @@ class Chat {
       );
       return chats;
     } catch (error) {
+      throw error;
+    }
+  }
+
+  static async getActiveChatsForSeller(sellerId) {
+    try {
+      // First verify the seller exists in users table
+      const [seller] = await db.query('SELECT id FROM users WHERE id = ?', [sellerId]);
+      if (!seller.length) {
+        throw new Error('Seller not found');
+      }
+
+      const [chats] = await db.query(
+        `SELECT 
+          cr.id,
+          cr.book_id,
+          cr.buyer_id,
+          b.username as buyer_name,
+          bk.bookName,
+          bk.imageData as bookImage,
+          bk.price,
+          bk.listingType,
+          (
+            SELECT message 
+            FROM messages 
+            WHERE chat_room_id = cr.id 
+            ORDER BY created_at DESC 
+            LIMIT 1
+          ) as last_message,
+          (
+            SELECT created_at 
+            FROM messages 
+            WHERE chat_room_id = cr.id 
+            ORDER BY created_at DESC 
+            LIMIT 1
+          ) as last_message_time,
+          (
+            SELECT COUNT(*) 
+            FROM messages 
+            WHERE chat_room_id = cr.id 
+            AND sender_id != ? 
+            AND is_read = 0
+          ) as unread_count
+        FROM chat_rooms cr
+        JOIN buyers b ON cr.buyer_id = b.id
+        JOIN books bk ON cr.book_id = bk.id
+        WHERE cr.seller_id = ?
+        AND EXISTS (
+          SELECT 1 
+          FROM messages m 
+          WHERE m.chat_room_id = cr.id
+        )
+        ORDER BY last_message_time DESC`,
+        [sellerId, sellerId]
+      );
+      
+      return chats;
+    } catch (error) {
+      console.error('Error in getActiveChatsForSeller:', error);
+      throw error;
+    }
+  }
+
+  static async getUnreadCounts(userId, userType) {
+    try {
+      console.log(`Getting unread counts for ${userType} ${userId}`);
+      
+      // Verify user exists
+      const table = userType === 'seller' ? 'users' : 'buyers';
+      const [user] = await db.query(`SELECT id FROM ${table} WHERE id = ?`, [userId]);
+      if (!user.length) {
+        console.log(`${userType} not found:`, userId);
+        throw new Error(`${userType} not found`);
+      }
+
+      // Get unread message counts for each chat room
+      const [results] = await db.query(
+        `SELECT cr.book_id, COUNT(m.id) as unread_count
+         FROM chat_rooms cr
+         JOIN messages m ON cr.id = m.chat_room_id
+         WHERE cr.${userType === 'seller' ? 'seller_id' : 'buyer_id'} = ? 
+         AND m.sender_id != ? 
+         AND m.is_read = 0
+         GROUP BY cr.book_id`,
+        [userId, userId]
+      );
+
+      console.log('Raw unread counts results:', results);
+
+      // Convert results to object with book_id as key
+      const unreadCounts = results.reduce((acc, { book_id, unread_count }) => {
+        acc[book_id] = unread_count;
+        return acc;
+      }, {});
+
+      console.log('Processed unread counts:', unreadCounts);
+      return unreadCounts;
+    } catch (error) {
+      console.error('Error getting unread counts:', error);
       throw error;
     }
   }
