@@ -25,13 +25,13 @@ const upload = multer({ storage });
 
 app.use(
   cors({
-    origin:"http://localhost:5173",
+    origin:"https://shelfx-app.vercel.app",
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
   })
 );
 
-// app.set('trust proxy', 1); 
+app.set('trust proxy', 1); 
 
 app.use(cookieParser());
 app.use(express.json());
@@ -39,9 +39,13 @@ app.use(fileUpload({ useTempFiles: true, tempFileDir: "./tmp/" }));
 app.use(morgan("dev"));
 app.use(bodyParser.urlencoded({ extended: true }));
 
-const MySQLStore = expressMySQL(session);
+// Apply cache middleware to API routes before router
+// Default cache duration is 1 hour (3600 seconds)
+// app.use(cacheMiddleware());
 
 // Enhanced session store configuration
+const MySQLStore = expressMySQL(session);
+
 const sessionStore = new MySQLStore({}, db);
 
 app.use(
@@ -49,13 +53,15 @@ app.use(
     key: process.env.SESSION_KEY || "session_cookie_name",
     secret: process.env.SESSION_SECRET || "asdg34NJSQKK78",
     store: sessionStore,
-    resave: false,
+    resave: true,
     saveUninitialized: false,
+    rolling: true,
     cookie: {
-      maxAge:  24 * 60 * 60 * 1000,
+      maxAge: 24 * 60 * 60 * 1000,
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      path: '/'
     }
   })
 );
@@ -89,11 +95,8 @@ const swaggerSpec = swaggerJsdoc(options);
 // Serve swagger docs
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-
-// Apply cache middleware to API routes
-// Default cache duration is 1 hour (3600 seconds)
+// Apply routes after cache middleware
 app.use(router);
-app.use(cacheMiddleware(3600));
 app.use(notFound); 
 app.use(errorHandler);
 

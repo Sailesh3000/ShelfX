@@ -199,10 +199,12 @@ class Chat {
           ) as last_message_time,
           (
             SELECT COUNT(*) 
-            FROM messages 
-            WHERE chat_room_id = cr.id 
-            AND sender_id != ? 
-            AND is_read = 0
+            FROM messages m
+            WHERE m.chat_room_id = cr.id 
+            AND (
+              (m.sender_id = cr.buyer_id AND m.is_read = 0)
+              OR (m.sender_id = cr.seller_id AND m.is_read = 0)
+            )
           ) as unread_count
         FROM chat_rooms cr
         JOIN buyers b ON cr.buyer_id = b.id
@@ -214,7 +216,7 @@ class Chat {
           WHERE m.chat_room_id = cr.id
         )
         ORDER BY last_message_time DESC`,
-        [sellerId, sellerId]
+        [sellerId]
       );
       
       return chats;

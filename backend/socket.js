@@ -4,7 +4,7 @@ import Chat from './models/chat.model.js';
 export const initializeSocket = (server) => {
   const io = new Server(server, {
     cors: {
-      origin: "http://localhost:5173",
+      origin: "https://shelfx-app.vercel.app",
       methods: ["GET", "POST"],
       credentials: true
     }

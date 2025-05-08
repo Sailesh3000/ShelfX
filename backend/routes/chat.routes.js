@@ -81,8 +81,9 @@ router.get('/:chatId/messages', verifyToken, chatController.getMessages);
 // Send a new message
 router.post('/:chatId/messages', verifyToken, chatController.sendMessage);
 
-// Get unread message counts for a buyer
-router.get('/unread-counts/:buyerId', verifyToken, chatController.getUnreadCounts);
+// Get unread message counts for a user
+router.get('/unread-counts/:userId', verifyToken, chatController.getUnreadCounts);
+router.get('/unread-counts/seller/:sellerId', verifyToken, chatController.getUnreadCounts);
 
 // Clear Redis cache
 router.post('/clear-cache', verifyToken, chatController.clearRedisCache);

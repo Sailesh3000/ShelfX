@@ -14,28 +14,42 @@ const RequestList = ({ sellerId }) => {
     let isMounted = true;
 
     const fetchRequests = async () => {
-      if (!sellerId) return;
+      if (!sellerId) {
+        console.log('No sellerId provided');
+        return;
+      }
       
+      console.log('Fetching requests for sellerId:', sellerId);
       try {
         const response = await axios.get(`https://shelfx-backend.onrender.com/requests/${sellerId}`, {
           withCredentials: true,
         });
+        
+        console.log('Received response:', response.data);
         
         if (isMounted) {
           setRequests(response.data);
 
           // Only dispatch buyer details if there is data available
           if (response.data && response.data.length > 0) {
+            const firstRequest = response.data[0];
+            console.log('First request data:', firstRequest);
+            
             dispatch(setBuyerDetails({
-              email: response.data[0].email,
-              bookName: response.data[0].bookName,
-              pincode: response.data[0].pincode,
-              state: response.data[0].state,
+              email: firstRequest.email,  // Using email field
+              bookName: firstRequest.bookName,
+              pincode: firstRequest.pincode,
+              state: firstRequest.state,
             }));
           }
         }
       } catch (error) {
         console.error('Error fetching requests:', error);
+        console.error('Error details:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message
+        });
       } finally {
         if (isMounted) {
           setLoading(false);
@@ -52,31 +66,25 @@ const RequestList = ({ sellerId }) => {
 
   const handleApproveRequest = async (bookId, sellerId, userId) => {
     try {
-      console.log(buyerDetails);
+      console.log('Approving request:', { bookId, sellerId, userId });
       const response = await axios.put(
         "https://shelfx-backend.onrender.com/requests/approve", 
         { 
           bookId,
           sellerId, 
-          userId, 
-          bookName: buyerDetails?.bookName, 
-          buyerEmail: buyerDetails?.email 
+          userId,
+          bookName: requests.find(req => req.bookId === bookId)?.bookName,
+          buyerEmail: requests.find(req => req.bookId === bookId)?.buyer_email
         },
         { withCredentials: true }
       );
       
-      setRequests((prevRequests) =>
-        prevRequests.map((req) =>
-          req.bookId === bookId && req.id === sellerId ? { ...req, status: 'approved' } : req
-        )
-      );
-
-      // Remove the approved book from the list
+      // Remove the approved request from the list
       setRequests((prevRequests) => 
-        prevRequests.filter(req => !(req.bookId === bookId && req.id === sellerId))
+        prevRequests.filter(req => !(req.bookId === bookId && req.userId === userId))
       );
 
-      alert(response.data.message || 'Request approved and email sent!');
+      alert(response.data.message || 'Request approved successfully!');
     } catch (error) {
       console.error('Error approving request:', error);
       alert('Failed to approve request. Please try again.');
@@ -85,14 +93,20 @@ const RequestList = ({ sellerId }) => {
 
   const handleRejectRequest = async (bookId, sellerId, userId) => {
     try {
-      await axios.put(`https://shelfx-backend.onrender.com/requests/${bookId}/reject`, { sellerId, userId },{ withCredentials: true });
-      setRequests((prevRequests) =>
-        prevRequests.map((req) =>
-          req.bookId === bookId && req.id === sellerId ? { ...req, status: 'rejected' } : req
-        )
+      console.log('Rejecting request:', { bookId, sellerId, userId });
+      await axios.put(
+        `https://shelfx-backend.onrender.com/requests/${bookId}/reject`, 
+        { sellerId, userId },
+        { withCredentials: true }
+      );
+      
+      // Remove the rejected request from the list
+      setRequests((prevRequests) => 
+        prevRequests.filter(req => !(req.bookId === bookId && req.userId === userId))
       );
     } catch (error) {
       console.error('Error rejecting request:', error);
+      alert('Failed to reject request. Please try again.');
     }
   };
 
@@ -116,22 +130,26 @@ const RequestList = ({ sellerId }) => {
             >
               <h4 className="text-xl font-semibold mb-2">{request.bookName}</h4>
               <div className="mt-2 mb-4 space-y-1 text-sm text-gray-700">
-                <p><strong>Buyer Email:</strong> {request.email}</p>
+                <p><strong>Buyer Email:</strong> {request.buyer_email}</p>
                 <p><strong>Pincode:</strong> {request.pincode}</p>
                 <p><strong>State:</strong> {request.state}</p>
               </div>
               <div className="mt-auto">
-                {request.status !== 'approved' && request.status !== 'rejected' ? (
+                {request.status !== 'APPROVED' && request.status !== 'REJECTED' ? (
                   <>
                     <button
                       className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors"
-                      onClick={() => handleApproveRequest(request.bookId, request.id, request.userId)}
+                      onClick={() => handleApproveRequest(
+                        request.bookId, 
+                        request.sellerId, 
+                        request.userId
+                      )}
                     >
                       Approve
                     </button>
                     <button
                       className="ml-4 bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
-                      onClick={() => handleRejectRequest(request.bookId, request.id,request.userId)}
+                      onClick={() => handleRejectRequest(request.bookId, request.sellerId, request.userId)}
                     >
                       Reject
                     </button>

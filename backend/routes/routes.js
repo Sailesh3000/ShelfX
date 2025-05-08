@@ -28,7 +28,8 @@ import {
 import { 
     getRequestsBySellerId, 
     approveRequest, 
-    rejectRequest 
+    rejectRequest,
+    getRequestCount
 } from "../controllers/requestControllers.js"; 
 import { 
     getSubscriptions,
@@ -42,6 +43,7 @@ import {
 import { getBuyerHistory, getSellerHistory } from '../controllers/historyController.js';
 import multer from 'multer'; // Middleware for handling file uploads
 import chatRoutes from './chat.routes.js';
+import { verifyToken } from '../middleware/auth.middleware.js';
 
 const upload = multer(); 
 const router = express.Router();
@@ -71,9 +73,10 @@ router.get("/status", getBookStatus);
 
 // Requests
 router.post("/request", postRequest);
-router.get("/requests/:sellerId", getRequestsBySellerId);
+router.get("/requests/:sellerId",  getRequestsBySellerId);
 router.put("/requests/approve", approveRequest);
-router.put("/requests/:bookId/reject", rejectRequest);
+router.put("/requests/:bookId/reject",  rejectRequest);
+router.get("/requests/count",  getRequestCount);
 
 // Subscriptions
 router.post("/subscribe/:selectedPlan", subscribePlan);
@@ -82,11 +85,11 @@ router.post("/adminStatus", adminStatus);
 router.get("/subscription/:id", getSubscriptionByUserId);
 
 // Books 
-
 router.get('/books/count', booksCount);  // admin
 router.post('/uploadBook', uploadBook);
 router.get('/books/sold', getBooksSold);  // admin
 router.get('/revenue', getRevenue);  // admin
+router.delete('/deleteBook/:id', deleteBook);  // Add this route for book deletion
 
 // Admin Book Management Routes
 router.get('/admin/books', getAllBooks);

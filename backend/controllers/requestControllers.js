@@ -4,20 +4,38 @@ import { addToHistory } from "./historyController.js";
 
 export const getRequestsBySellerId = async (req, res) => {
     const { sellerId } = req.params;
+    console.log('Received request for sellerId:', sellerId);
+    console.log('Session:', req.session);
+    console.log('Headers:', req.headers);
 
     try {
+        // First check if seller exists
+        const [sellerCheck] = await db.query(
+            "SELECT id FROM users WHERE id = ?",
+            [sellerId]
+        );
+
+        if (sellerCheck.length === 0) {
+            console.log('Seller not found:', sellerId);
+            return res.status(404).json({ 
+                message: 'Seller not found',
+                sellerId: sellerId
+            });
+        }
+
         const sql = `
             SELECT 
-                r.id,
+                r.id as requestId,
                 r.userId,
                 r.bookId,
-                b.id,
+                b.id as buyerId,
                 b.pincode,
                 b.state,
-                b.email,
-                bk.id,
+                b.email as email,
+                bk.id as bookId,
                 bk.bookName,
-                s.id
+                s.id as sellerId,
+                r.status
             FROM 
                 request r
             JOIN 
@@ -30,16 +48,32 @@ export const getRequestsBySellerId = async (req, res) => {
                 r.sellerId = ? AND r.status = "PENDING";
         `;
 
+        console.log('Executing SQL query with sellerId:', sellerId);
         const [rows] = await db.query(sql, [sellerId]);
+        console.log('Query results:', rows);
         
         if (!rows || rows.length === 0) {
-            return res.status(404).json({ message: 'No pending requests found' });
+            console.log('No pending requests found for sellerId:', sellerId);
+            return res.status(200).json([]); // Return empty array instead of 404
+        }
+        
+        // Log the first row to verify the structure
+        if (rows.length > 0) {
+            console.log('First row structure:', Object.keys(rows[0]));
         }
         
         res.status(200).json(rows);
     } catch (err) {
         console.error("Error fetching requests:", err);
-        res.status(500).send("Server error");
+        console.error("Error details:", {
+            message: err.message,
+            code: err.code,
+            sqlMessage: err.sqlMessage
+        });
+        res.status(500).json({ 
+            message: "Server error",
+            error: err.message
+        });
     }
 };
 
@@ -48,18 +82,18 @@ export const approveRequest = async (req, res) => {
 
     try {
         // Update request status to APPROVED
-        const [result] = await db.query(
+        const [requestResult] = await db.query(
             "UPDATE request SET status = 'APPROVED' WHERE bookId = ? AND sellerId = ? AND userId = ?",
             [bookId, sellerId, userId]
         );
 
-        if (result.affectedRows === 0) {
+        if (requestResult.affectedRows === 0) {
             return res.status(404).json({ message: "Request not found" });
         }
 
-        // Get book price
+        // Get book price and details
         const [bookRows] = await db.query(
-            "SELECT price FROM books WHERE id = ?",
+            "SELECT price, bookName FROM books WHERE id = ?",
             [bookId]
         );
 
@@ -68,20 +102,25 @@ export const approveRequest = async (req, res) => {
         }
 
         // Add to history
-        await addToHistory(
-            bookId,
-            sellerId,
-            userId,
-            bookName,
-            bookRows[0].price,
-            'APPROVED'
+        const [historyResult] = await db.query(
+            `INSERT INTO history (bookId, sellerId, buyerId, bookName, price, status, requestDate) 
+             VALUES (?, ?, ?, ?, ?, 'APPROVED', CURRENT_TIMESTAMP)`,
+            [bookId, sellerId, userId, bookRows[0].bookName, bookRows[0].price]
         );
 
+        if (historyResult.affectedRows === 0) {
+            return res.status(500).json({ message: "Failed to add to history" });
+        }
+
         // Mark book as SOLD and store the approved buyer's ID
-        await db.query(
+        const [bookUpdateResult] = await db.query(
             "UPDATE books SET status = 'SOLD', approvedBuyerId = ? WHERE id = ?",
             [userId, bookId]
         );
+
+        if (bookUpdateResult.affectedRows === 0) {
+            return res.status(500).json({ message: "Failed to update book status" });
+        }
 
         // Send approval email
         const emailSent = await sendApprovalEmail(buyerEmail, bookName);
@@ -89,10 +128,23 @@ export const approveRequest = async (req, res) => {
             console.error("Failed to send approval email");
         }
 
-        res.json({ message: "Request approved and book marked as sold" });
+        res.json({ 
+            message: "Request approved successfully",
+            history: {
+                bookId,
+                sellerId,
+                buyerId: userId,
+                bookName: bookRows[0].bookName,
+                price: bookRows[0].price,
+                status: 'APPROVED'
+            }
+        });
     } catch (error) {
         console.error("Error approving request:", error);
-        res.status(500).json({ message: "Error approving request" });
+        res.status(500).json({ 
+            message: "Error approving request",
+            error: error.message 
+        });
     }
 };
 

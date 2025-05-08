@@ -112,7 +112,7 @@ const Hero = () => {
                     boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
                   }}
                 >
-                  Upload a Book
+                 
                 </motion.button>
               </motion.a>
             </motion.div>

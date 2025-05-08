@@ -35,10 +35,31 @@ if (!isTestEnvironment && redisClient) {
 // Cache middleware function with performance measurement
 export const cacheMiddleware = (duration = 3600) => {
   return async (req, res, next) => {
-    // Skip caching for unread counts endpoints and non-GET requests
+    // List of frontend navigation routes to cache
+    const frontendRoutes = [
+      '/login-seller',
+      '/login-buyer',
+      '/signup-seller',
+      '/signup-buyer',
+      '/home',
+      '/profile',
+      '/books',
+      '/requests',
+      '/messages'
+    ];
+
+    // Skip caching if:
+    // 1. In test environment
+    // 2. Not a GET request
+    // 3. Not a frontend navigation route
+    // 4. Contains specific API endpoints
     if (isTestEnvironment || 
         req.method !== 'GET' || 
-        req.path.includes('/unread-counts/')) {
+        !frontendRoutes.some(route => req.path.startsWith(route)) ||
+        req.path.includes('/api/') ||
+        req.path.includes('/unread-counts/') ||
+        req.path.includes('/check-auth')) {
+      console.log(`[REDIS] Skipping cache for route: ${req.path}`);
       return next();
     }
 
@@ -60,7 +81,7 @@ export const cacheMiddleware = (duration = 3600) => {
         cacheHit = true;
         const parsedResponse = JSON.parse(cachedResponse);
         const endTime = performance.now();
-        console.log(`[REDIS PERFORMANCE] Cache HIT: ${req.originalUrl || req.url} - Response time: ${(endTime - startTime).toFixed(2)}ms`);
+        console.log(`[REDIS CACHE HIT] Route: ${req.path} - Response time: ${(endTime - startTime).toFixed(2)}ms`);
         return res.status(200).json(parsedResponse);
       }
       
@@ -71,11 +92,18 @@ export const cacheMiddleware = (duration = 3600) => {
       res.json = function(body) {
         // Only cache successful responses
         if (res.statusCode >= 200 && res.statusCode < 300) {
-          redisClient.setEx(key, duration, JSON.stringify(body));
+          redisClient.setEx(key, duration, JSON.stringify(body))
+            .then(() => {
+              const endTime = performance.now();
+              console.log(`[REDIS CACHE MISS] Route: ${req.path} - Response time: ${(endTime - startTime).toFixed(2)}ms - Cached for ${duration}s`);
+            })
+            .catch(error => {
+              console.error(`[REDIS CACHE ERROR] Failed to cache response for ${req.path}:`, error);
+            });
+        } else {
+          const endTime = performance.now();
+          console.log(`[REDIS CACHE SKIP] Route: ${req.path} - Status: ${res.statusCode} - Response time: ${(endTime - startTime).toFixed(2)}ms`);
         }
-        
-        const endTime = performance.now();
-        console.log(`[REDIS PERFORMANCE] Cache MISS: ${req.originalUrl || req.url} - Response time: ${(endTime - startTime).toFixed(2)}ms`);
         
         // Call original method
         return originalSend.call(this, body);
@@ -83,9 +111,9 @@ export const cacheMiddleware = (duration = 3600) => {
       
       next();
     } catch (error) {
-      console.error('Redis cache error:', error);
+      console.error(`[REDIS CACHE ERROR] Route: ${req.path} - Error:`, error);
       const endTime = performance.now();
-      console.log(`[REDIS PERFORMANCE] Cache ERROR: ${req.originalUrl || req.url} - Response time: ${(endTime - startTime).toFixed(2)}ms`);
+      console.log(`[REDIS CACHE ERROR] Route: ${req.path} - Response time: ${(endTime - startTime).toFixed(2)}ms`);
       next(); // Continue without caching
     }
   };

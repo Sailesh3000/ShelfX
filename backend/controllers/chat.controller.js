@@ -64,10 +64,12 @@ export const getUserChats = async (req, res) => {
 
 export const getUnreadCounts = async (req, res) => {
   try {
-    const { buyerId } = req.params;
-    console.log('Getting unread counts for buyer:', buyerId);
+    const userId = req.params.userId || req.params.sellerId;
+    const userType = req.path.includes('/seller/') ? 'seller' : 'buyer';
+    
+    console.log(`Getting unread counts for ${userType} ${userId}`);
 
-    const unreadCounts = await Chat.getUnreadCounts(buyerId, 'buyer');
+    const unreadCounts = await Chat.getUnreadCounts(userId, userType);
     console.log('Sending unread counts response:', unreadCounts);
     res.json(unreadCounts);
   } catch (error) {

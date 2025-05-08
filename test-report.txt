@@ -1,0 +1,119 @@
+# ShelfX Test Report
+Generated on: ${new Date().toLocaleString()}
+
+## Executive Summary
+Total Test Suites: 10
+Passed Test Suites: 5
+Failed Test Suites: 5
+Total Tests: 76
+Passed Tests: 65
+Failed Tests: 11
+Test Execution Time: 5.614s
+
+## Detailed Test Results
+
+### 1. Buyer Controller Tests
+Status: Failed
+Location: backend/tests/buyerController.test.js
+Issues:
+- fetch is not defined in the test environment
+- Email verification API integration tests failing
+- Database query failure tests not properly mocked
+
+### 2. Admin Controller Tests
+Status: Passed
+Location: backend/tests/adminController.test.js
+Features Tested:
+- Admin login functionality
+- Error handling
+- Database error scenarios
+- Authentication validation
+
+### 3. BookGrid Component Tests
+Status: Passed
+Location: src/pages/BookGrid.test.jsx
+Features Tested:
+- Book listing display
+- Unread message counts
+- Socket context integration
+- Seller details management
+Warnings:
+- React Router Future Flag warnings (non-critical)
+- Some state updates not wrapped in act()
+
+### 4. Request Controller Tests
+Status: Failed
+Location: backend/tests/requestController.test.js
+Issues:
+- Test implementation needs review
+- Potential mocking issues
+
+### 5. Seller Controller Tests
+Status: Failed
+Location: backend/tests/sellerController.test.js
+Issues:
+- Test implementation needs review
+- Potential mocking issues
+
+## Issues and Recommendations
+
+### 1. Environment Setup Issues
+- Need to properly mock fetch in the test environment
+- Add proper test environment configuration for external API calls
+- Implement proper database mocking
+
+### 2. React Testing Improvements
+- Wrap state updates in act() to prevent warnings
+- Better handling of async operations in component tests
+- Improve component isolation in tests
+
+### 3. Test Coverage Analysis
+- Overall test coverage is good (65/76 tests passing)
+- Areas needing improvement:
+  * Buyer controller tests
+  * Request controller tests
+  * Seller controller tests
+  * External API integration tests
+
+### 4. Performance Analysis
+- Test execution time: 5.614s
+- No significant performance bottlenecks identified
+- Test suite runs efficiently
+
+## Action Items
+
+### High Priority
+1. Fix fetch not defined error in buyer controller tests
+2. Implement proper mocking for external API calls
+3. Address React testing warnings in BookGrid component
+
+### Medium Priority
+1. Review and fix failing tests in request controller
+2. Review and fix failing tests in seller controller
+3. Improve test documentation
+
+### Low Priority
+1. Add more comprehensive error handling in test cases
+2. Implement additional edge case testing
+3. Add performance benchmarks
+
+## Test Environment
+- Node.js Environment
+- Jest Testing Framework
+- React Testing Library
+- Mock Service Worker (for API mocking)
+
+## Notes
+- Some tests are failing due to environment setup issues
+- React component tests show good coverage but need optimization
+- Backend controller tests need significant improvement
+- Consider implementing end-to-end tests for critical user flows
+
+## Next Steps
+1. Address high-priority action items
+2. Review and update test documentation
+3. Implement continuous integration test reporting
+4. Regular test maintenance and updates
+
+---
+End of Test Report 
